@@ -1,0 +1,43 @@
+meditrail/
+├── .gitignore
+├── README.md
+├── client/
+│   ├── .env.example
+│   ├── index.html
+│   ├── package.json
+│   └── src/
+│       ├── App.jsx
+│       ├── main.jsx
+│       ├── index.css
+│       ├── components/
+│       ├── pages/
+│       ├── layouts/
+│       ├── services/
+│       ├── hooks/
+│       ├── routes/
+│       └── context/
+├── server/
+│   └── src/
+│       ├── config/
+│       ├── middleware/
+│       ├── modules/
+│       │   ├── auth/
+│       │   ├── users/
+│       │   ├── patients/
+│       │   ├── doctors/
+│       │   ├── consultations/
+│       │   ├── prescriptions/
+│       │   ├── referrals/
+│       │   ├── documents/
+│       │   └── audit/
+│       ├── routes/
+│       └── utils/
+├── database/
+│   ├── migrations/
+│   └── seed/
+└── docs/
+    ├── requirements.md
+    ├── architecture.md
+    ├── api-spec.md
+    ├── testing.md
+    └── git-workflow.md
