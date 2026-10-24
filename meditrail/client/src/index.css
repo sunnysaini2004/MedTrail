@@ -1,2 +1,260 @@
-/* Global styles placeholder.
-   Tailwind CSS setup will be added in a dedicated step. */
+
+:root {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  color: #17313b;
+  background: #ffffff;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  scroll-behavior: smooth;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.navbar {
+  min-height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 16px 7%;
+  border-bottom: 1px solid #e5eeed;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 21px;
+  font-weight: 750;
+  color: #123b46;
+}
+
+.brand-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: #0f766e;
+  color: white;
+}
+
+.navbar nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 26px;
+  color: #52666d;
+  font-size: 14px;
+}
+
+.navbar nav a:hover,
+.login-link:hover {
+  color: #0f766e;
+}
+
+.login-link {
+  font-weight: 650;
+  color: #0f766e;
+}
+
+.hero {
+  padding: 100px 7% 90px;
+  text-align: center;
+  background: linear-gradient(180deg, #f0faf8 0%, #ffffff 100%);
+}
+
+.eyebrow {
+  color: #0f766e;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.hero h1 {
+  max-width: 850px;
+  margin: 20px auto;
+  font-size: clamp(38px, 6vw, 68px);
+  line-height: 1.1;
+  letter-spacing: -2px;
+}
+
+.hero h1 span {
+  color: #0f766e;
+}
+
+.hero-description {
+  max-width: 620px;
+  margin: 0 auto;
+  color: #5c7077;
+  font-size: 17px;
+  line-height: 1.8;
+}
+
+.hero-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 30px;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 24px;
+  border-radius: 10px;
+  font-weight: 650;
+}
+
+.button-primary {
+  color: white;
+  background: #0f766e;
+}
+
+.button-primary:hover {
+  background: #115e59;
+}
+
+.button-secondary {
+  border: 1px solid #cddbd9;
+  background: white;
+}
+
+.demo-note {
+  margin-top: 24px;
+  color: #718187;
+  font-size: 12px;
+}
+
+.services,
+.about,
+.contact {
+  padding: 76px 7%;
+}
+
+.services {
+  text-align: center;
+}
+
+.services h2,
+.about h2,
+.contact h2 {
+  font-size: clamp(27px, 4vw, 40px);
+  letter-spacing: -1px;
+}
+
+.service-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+  margin-top: 36px;
+  text-align: left;
+}
+
+.service-card {
+  padding: 26px;
+  border: 1px solid #e0ebea;
+  border-radius: 16px;
+  background: #ffffff;
+}
+
+.service-icon {
+  color: #0f766e;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.service-card p,
+.about p,
+.contact p {
+  color: #5c7077;
+  line-height: 1.8;
+}
+
+.about {
+  background: #f5faf9;
+}
+
+.about > p:last-child,
+.contact > p {
+  max-width: 680px;
+}
+
+.contact {
+  text-align: center;
+}
+
+.contact > p {
+  margin: 0 auto;
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 28px 7%;
+  border-top: 1px solid #e5eeed;
+}
+
+.footer p {
+  color: #718187;
+  font-size: 12px;
+}
+
+@media (max-width: 700px) {
+  .navbar {
+    flex-wrap: wrap;
+    padding: 16px 5%;
+  }
+
+  .navbar nav {
+    order: 3;
+    width: 100%;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .hero {
+    padding: 72px 5%;
+  }
+
+  .hero h1 {
+    letter-spacing: -1px;
+  }
+
+  .service-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .services,
+  .about,
+  .contact {
+    padding: 56px 5%;
+  }
+
+  .footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

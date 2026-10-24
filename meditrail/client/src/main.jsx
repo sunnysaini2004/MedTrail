@@ -1,2 +1,11 @@
-// React application entry point.
-// We will add the React root and global styles in the next coding step.
+
+import React from "react";
+import { createRoot } from "react-dom/client";
+import App from "./App.jsx";
+import "./index.css";
+
+createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
