@@ -13,7 +13,8 @@ async function testDatabaseConnection() {
     console.log("Database:", rows[0].databaseName);
     console.log("MySQL version:", rows[0].mysqlVersion);
   } catch (error) {
-    console.error("MySQL connection failed:", error.message);
+    console.error("MySQL connection failed:", error.code || error.name);
+    process.exitCode = 1;
   } finally {
     await pool.end();
   }

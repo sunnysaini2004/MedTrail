@@ -1,26 +1,30 @@
 # MediTrail Testing Notes
 
-Use synthetic data only. The backend auth smoke test creates a temporary
-account with an `example.invalid` email and removes that account afterward.
-Run it from `server/` with `npm run test:auth` while MySQL is available.
+Use synthetic data only. The authentication and workflow smoke tests create and delete temporary rows in the configured meditrail database. Do not point them at a database with unrelated data.
 
-The smoke test checks:
+## Database setup checks
 
-- Short passwords and duplicate email addresses are rejected.
-- Patient registration creates both the account and profile, stores a password
-  hash, and does not accept a caller-supplied privileged role.
-- Valid login sets an HttpOnly cookie; invalid credentials fail.
-- The protected `/api/v1/auth/me` route accepts a valid cookie and rejects an
-  anonymous request.
-- The patient dashboard endpoint accepts the patient's session, returns that
-  account's patient code and counts, and rejects anonymous requests.
+Run from server/ in PowerShell:
 
-The frontend build can be checked from `client/` with `npm run build`. The
-backend health endpoint is `GET /api/health`.
+- npm run db:check connects to the configured database and prints its name and MySQL version.
+- npm run db:init creates the meditrail database and missing tables from database/schema.sql. It does not delete rows.
+- npm run demo:seed creates demo records when needed and configures the intended demo admin. It does not delete other patients.
+- npm run demo:reset is destructive to all PATIENT-role accounts in meditrail and their linked clinical records. It requires typing RESET MEDTRAIL PATIENTS, keeps Admin and Doctor rows, may update the fixed old demo accounts to their documented logins, retains audit history, and reseeds the synthetic demo patient. Do not confirm if patient data must be kept.
 
-Run the complete synthetic doctor workflow from `server/` with
-`npm run test:workflows`. It exercises administrator provisioning, grants,
-consultations, prescriptions, referrals, revocation, and the patient timeline,
-then removes the test users and related records. The additive access table is
-created with `npm run db:migrate:access`; the migration uses `CREATE TABLE IF
-NOT EXISTS` and preserves existing data.
+The reset is intentionally not run by automated tests.
+
+## Authentication smoke test
+
+Run npm run test:auth from server/. It creates a temporary synthetic Gmail patient, checks invalid domains and passwords, patient-only registration, bcrypt hashing, the selected role at login, the cookie session, /me, the patient dashboard, and anonymous access denial. It deletes the temporary synthetic account afterward.
+
+## Workflow smoke test
+
+Run npm run test:workflows from server/. It creates temporary synthetic patient, admin, and doctor accounts. It checks role restrictions, doctor provisioning, admin-created patients, assignment and reassignment, assigned-patient access boundaries, consultations, prescriptions, referrals, safe account deletion, and the patient timeline. It removes its remaining test records afterward.
+
+Run npm run test:demo from server/. It tests the demo account seed with a mock database connection, confirms passwords are bcrypt hashes, checks Gmail validation, and checks each role's login and dashboard destination without changing MySQL data.
+
+## Frontend build
+
+Run npm run build from client/ to create the production build.
+
+Role dashboards are /dashboard for PATIENT, /doctor for DOCTOR, and /admin for ADMIN. Separate login pages are /login/patient, /login/doctor, and /login/admin.

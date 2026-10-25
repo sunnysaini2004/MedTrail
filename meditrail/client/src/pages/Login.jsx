@@ -1,12 +1,56 @@
 import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import Navbar from "../components/Navbar.jsx";
 import Footer from "../components/Footer.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
+import {
+  canRoleAccessPath,
+  getRoleFromLoginSlug,
+  getRoleHomePath,
+  getRoleLabel,
+  getRoleLoginPath,
+} from "../lib/roleRoutes.js";
+
+const loginRoles = ["ADMIN", "DOCTOR", "PATIENT"];
+
+function RoleLoginSelection() {
+  const location = useLocation();
+
+  return (
+    <div className="app">
+      <Navbar />
+      <main className="mx-auto max-w-5xl px-6 py-16">
+        <p className="eyebrow text-center">SIGN IN</p>
+        <h1 className="mt-2 text-center text-3xl font-bold text-slate-900">Choose your account type</h1>
+        <p className="mt-3 text-center text-slate-600">You will only be able to sign in to the dashboard for your account.</p>
+        <div className="mt-8 grid gap-4 md:grid-cols-3">
+          {loginRoles.map((role) => (
+            <Link
+              key={role}
+              className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-teal-500 hover:shadow-md"
+              to={getRoleLoginPath(role)}
+              state={location.state}
+            >
+              <span className="text-xs font-bold tracking-[0.18em] text-teal-700">{getRoleLabel(role).toUpperCase()}</span>
+              <span className="mt-2 block text-xl font-semibold text-slate-900">Login as {getRoleLabel(role)}</span>
+              <span className="mt-2 block text-sm text-slate-600">Open the {getRoleHomePath(role)} workspace.</span>
+            </Link>
+          ))}
+        </div>
+        <p className="mt-8 text-center text-sm text-slate-600">
+          New patient? <Link className="font-semibold text-teal-700 underline" to="/register">Register here</Link>
+        </p>
+      </main>
+      <Footer />
+    </div>
+  );
+}
 
 function Login() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { role: roleSlug } = useParams();
+  const selectedRole = getRoleFromLoginSlug(roleSlug);
   const { login, authError } = useAuth();
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -16,11 +60,17 @@ function Login() {
     setError("");
     setSubmitting(true);
 
-    const credentials = Object.fromEntries(new FormData(event.currentTarget));
+    const credentials = {
+      ...Object.fromEntries(new FormData(event.currentTarget)),
+      role: selectedRole,
+    };
     try {
       const user = await login(credentials);
-      const roleHome = user.role === "ADMIN" ? "/admin" : user.role === "DOCTOR" ? "/doctor" : "/dashboard";
-      const destination = location.state?.from?.pathname || roleHome;
+      const roleHome = getRoleHomePath(user.role);
+      const requestedPath = location.state?.from?.pathname;
+      const destination = canRoleAccessPath(user.role, requestedPath)
+        ? requestedPath
+        : roleHome;
       navigate(destination, { replace: true });
     } catch (requestError) {
       setError(requestError.message);
@@ -29,6 +79,8 @@ function Login() {
     }
   }
 
+  if (!selectedRole) return <RoleLoginSelection />;
+
   return (
     <div className="app">
       <Navbar />
@@ -36,9 +88,9 @@ function Login() {
         <section className="about">
           <p className="eyebrow">WELCOME BACK</p>
 
-          <h2>Login to MediTrail</h2>
+          <h2>Login as {getRoleLabel(selectedRole)}</h2>
 
-          <p>Continue your connected healthcare journey.</p>
+          <p>Use the Gmail address and password for your {getRoleLabel(selectedRole).toLowerCase()} account.</p>
 
           <form className="auth-form" onSubmit={handleSubmit}>
             <div>
@@ -47,7 +99,8 @@ function Login() {
                 id="email"
                 name="email"
                 type="email"
-                placeholder="Enter your email"
+                placeholder="name@gmail.com"
+                autoCapitalize="none"
                 autoComplete="email"
                 maxLength={255}
                 required
@@ -74,9 +127,11 @@ function Login() {
             </button>
           </form>
 
-          <p>
-            Don't have an account? <Link to="/register">Create an account</Link>
+          <p className="text-center text-sm">
+            <Link className="font-semibold text-teal-700 underline" to="/login" state={location.state}>Choose a different account type</Link>
           </p>
+
+          {selectedRole === "PATIENT" && <p>Don't have an account? <Link to="/register">Create a patient account</Link></p>}
 
           <p className="demo-note">
             Academic project demo. Use synthetic credentials only.

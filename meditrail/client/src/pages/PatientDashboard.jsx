@@ -67,6 +67,9 @@ function PatientDashboard() {
               Blood group: {dashboard?.patient.bloodGroup || "Not recorded"}
             </span>
           </div>
+          <p className="mt-3 text-sm text-slate-600">
+            Assigned doctor: <strong className="text-slate-900">{dashboard?.assignedDoctor ? `${dashboard.assignedDoctor.fullName} · ${dashboard.assignedDoctor.specialty}` : "Not assigned yet"}</strong>
+          </p>
         </section>
 
         <section className="dashboard-summary" aria-label="Patient summary">

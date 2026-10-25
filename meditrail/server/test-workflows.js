@@ -12,10 +12,11 @@ const pool = require("./src/config/db");
 async function runWorkflowSmokeTest() {
   const id = randomUUID();
   const emails = {
-    patient: "meditrail-patient-" + id + "@example.invalid",
-    admin: "meditrail-admin-" + id + "@example.invalid",
-    doctorOne: "meditrail-doctor-one-" + id + "@example.invalid",
-    doctorTwo: "meditrail-doctor-two-" + id + "@example.invalid",
+    patient: "meditrail-patient-" + id + "@gmail.com",
+    admin: "meditrail-admin-" + id + "@gmail.com",
+    doctorOne: "meditrail-doctor-one-" + id + "@gmail.com",
+    doctorTwo: "meditrail-doctor-two-" + id + "@gmail.com",
+    adminCreatedPatient: "meditrail-managed-patient-" + id + "@gmail.com",
   };
   const passwords = {
     patient: randomBytes(18).toString("base64url") + "Aa1!",
@@ -68,6 +69,7 @@ async function runWorkflowSmokeTest() {
       phone: "+91 90000 00001",
       password: passwords.patient,
       confirmPassword: passwords.patient,
+      role: "ADMIN",
     });
     assert.equal(patientRegistration.response.status, 201);
     const patientCode = patientRegistration.body.user.patientCode;
@@ -75,18 +77,25 @@ async function runWorkflowSmokeTest() {
 
     const patientCannotAdmin = await request("/api/v1/admin/doctors", "GET", undefined, patientCookie);
     assert.equal(patientCannotAdmin.response.status, 403, "patient role should not access admin resources");
+    const patientCannotDoctor = await request("/api/v1/doctor/me", "GET", undefined, patientCookie);
+    assert.equal(patientCannotDoctor.response.status, 403, "patient role should not access doctor resources");
 
     const adminLogin = await request("/api/v1/auth/login", "POST", {
       email: emails.admin,
       password: passwords.admin,
+      role: "ADMIN",
     });
     assert.equal(adminLogin.response.status, 200);
     const adminCookie = sessionCookie(adminLogin);
+    assert.equal(adminLogin.body.user.role, "ADMIN", "admin login should return the database role");
+    const adminCannotDoctor = await request("/api/v1/doctor/me", "GET", undefined, adminCookie);
+    assert.equal(adminCannotDoctor.response.status, 403, "admin role should not access doctor resources");
 
     const firstDoctor = await request("/api/v1/admin/doctors", "POST", {
       fullName: "Synthetic Workflow Doctor One",
       email: emails.doctorOne,
       password: passwords.doctorOne,
+      role: "DOCTOR",
       specialty: "General Medicine",
       role: "ADMIN",
     }, adminCookie);
@@ -104,15 +113,46 @@ async function runWorkflowSmokeTest() {
     const doctorOneLogin = await request("/api/v1/auth/login", "POST", {
       email: emails.doctorOne,
       password: passwords.doctorOne,
+      role: "DOCTOR",
     });
     assert.equal(doctorOneLogin.response.status, 200);
     const doctorOneCookie = sessionCookie(doctorOneLogin);
+    assert.equal(doctorOneLogin.body.user.role, "DOCTOR", "doctor login should return the database role");
+    const doctorCannotAdmin = await request("/api/v1/admin/doctors", "GET", undefined, doctorOneCookie);
+    assert.equal(doctorCannotAdmin.response.status, 403, "doctor role should not access admin resources");
     const doctorProfile = await request("/api/v1/doctor/me", "GET", undefined, doctorOneCookie);
     assert.equal(doctorProfile.response.status, 200);
     const referralOptions = await request("/api/v1/doctor/referrals/doctors", "GET", undefined, doctorOneCookie);
-    assert.equal(referralOptions.body.doctors.length, 1, "doctors should only see other active doctors as referral options");
+    assert.equal(referralOptions.body.doctors.some((entry) => String(entry.userId) === String(secondDoctor.body.doctor.userId)), true, "another active doctor should be a referral option");
+    assert.equal(referralOptions.body.doctors.some((entry) => String(entry.userId) === String(firstDoctor.body.doctor.userId)), false, "a doctor should not see themself as a referral option");
     const noGrantPatients = await request("/api/v1/doctor/patients", "GET", undefined, doctorOneCookie);
     assert.deepEqual(noGrantPatients.body.patients, [], "doctor must not see unassigned patients");
+
+    const managedPatient = await request("/api/v1/admin/patients", "POST", {
+      fullName: "Synthetic Admin-Created Patient",
+      email: emails.adminCreatedPatient,
+      password: "demo1234",
+      role: "DOCTOR",
+    }, adminCookie);
+    assert.equal(managedPatient.response.status, 201);
+    assert.equal(managedPatient.body.patient.role, "PATIENT", "admin patient form must not accept a requested role");
+    const managedPatientCode = managedPatient.body.patient.patientCode;
+
+    const firstManagedAssignment = await request("/api/v1/admin/patient-assignment", "PUT", {
+      patientCode: managedPatientCode,
+      doctorUserId: firstDoctor.body.doctor.userId,
+    }, adminCookie);
+    assert.equal(firstManagedAssignment.response.status, 200);
+    const firstDoctorManagedPatients = await request("/api/v1/doctor/patients", "GET", undefined, doctorOneCookie);
+    assert.equal(firstDoctorManagedPatients.body.patients.some((entry) => entry.patientCode === managedPatientCode), true);
+
+    const changedManagedAssignment = await request("/api/v1/admin/patient-assignment", "PUT", {
+      patientCode: managedPatientCode,
+      doctorUserId: secondDoctor.body.doctor.userId,
+    }, adminCookie);
+    assert.equal(changedManagedAssignment.response.status, 200);
+    const revokedManagedPatient = await request("/api/v1/doctor/patients/" + managedPatientCode + "/consultations", "GET", undefined, doctorOneCookie);
+    assert.equal(revokedManagedPatient.response.status, 404, "changing assignment removes the previous doctor's access");
 
     const grant = await request("/api/v1/admin/patient-access", "POST", {
       patientCode,
@@ -145,9 +185,12 @@ async function runWorkflowSmokeTest() {
     const doctorTwoLogin = await request("/api/v1/auth/login", "POST", {
       email: emails.doctorTwo,
       password: passwords.doctorTwo,
+      role: "DOCTOR",
     });
     assert.equal(doctorTwoLogin.response.status, 200);
     const doctorTwoCookie = sessionCookie(doctorTwoLogin);
+    const secondDoctorManagedPatients = await request("/api/v1/doctor/patients", "GET", undefined, doctorTwoCookie);
+    assert.equal(secondDoctorManagedPatients.body.patients.some((entry) => entry.patientCode === managedPatientCode), true);
 
     const deniedConsultation = await request("/api/v1/doctor/patients/" + patientCode + "/consultations", "GET", undefined, doctorTwoCookie);
     assert.equal(deniedConsultation.response.status, 404, "a doctor without a grant must not view patient history");
@@ -193,7 +236,19 @@ async function runWorkflowSmokeTest() {
     const revokedDoctorRead = await request("/api/v1/doctor/patients/" + patientCode + "/consultations", "GET", undefined, doctorOneCookie);
     assert.equal(revokedDoctorRead.response.status, 404, "revoking a grant must remove doctor access immediately");
 
-    console.log("Workflow smoke checks passed: admin provisioning, access grants, consultation, prescription, referral acceptance/completion, authorization, revocation, and patient timeline.");
+    const deletedManagedPatient = await request("/api/v1/admin/patients/" + managedPatientCode, "DELETE", undefined, adminCookie);
+    assert.equal(deletedManagedPatient.response.status, 200, "admin should delete a patient and its linked records safely");
+    const remainingPatients = await request("/api/v1/admin/patients", "GET", undefined, adminCookie);
+    assert.equal(remainingPatients.body.patients.some((entry) => entry.patientCode === managedPatientCode), false);
+
+    const deletedDoctor = await request("/api/v1/admin/doctors/" + secondDoctor.body.doctor.userId, "DELETE", undefined, adminCookie);
+    assert.equal(deletedDoctor.response.status, 200, "admin should delete a doctor and linked referrals safely");
+    const remainingDoctors = await request("/api/v1/admin/doctors", "GET", undefined, adminCookie);
+    assert.equal(remainingDoctors.body.doctors.some((entry) => entry.userId === secondDoctor.body.doctor.userId), false);
+    const patientAfterDoctorDelete = await request("/api/v1/patient/dashboard", "GET", undefined, patientCookie);
+    assert.equal(patientAfterDoctorDelete.response.status, 200, "deleting one doctor should keep other patients");
+
+    console.log("Workflow smoke checks passed: role login, admin patient/doctor provisioning, assignment changes, assigned-patient boundaries, consultation, prescription, referral, safe deletes, and patient timeline.");
   } finally {
     const placeholders = emails.patient ? Object.values(emails).map(() => "?").join(",") : "?";
     const [users] = await pool.execute(
@@ -243,6 +298,6 @@ async function runWorkflowSmokeTest() {
 }
 
 runWorkflowSmokeTest().catch((error) => {
-  console.error("Workflow smoke checks failed:", error.message);
+  console.error("Workflow smoke checks failed:", error.stack || error.message);
   process.exitCode = 1;
 });

@@ -1,13 +1,13 @@
-const { randomBytes } = require("node:crypto");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const pool = require("../../config/db");
 const { getJwtSecret } = require("./auth.middleware");
-const { writeAudit } = require("../audit/audit.service");
+const { isGmailAddress } = require("./email-validation");
+const { createPatientAccount } = require("../patients/patient.service");
 
 const COOKIE_NAME = "meditrail_token";
 const TOKEN_TTL_SECONDS = 15 * 60;
-const BCRYPT_ROUNDS = 12;
+const LOGIN_ROLES = new Set(["PATIENT", "DOCTOR", "ADMIN"]);
 
 function setAuthCookie(res, token) {
   res.cookie(COOKIE_NAME, token, {
@@ -59,8 +59,8 @@ function validateRegistration(body) {
     return "Full name must be between 2 and 120 characters.";
   }
 
-  if (typeof body.email !== "string" || body.email.trim().length > 255 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email.trim())) {
-    return "Enter a valid email address.";
+  if (!isGmailAddress(body.email)) {
+    return "Enter a valid Gmail address ending in @gmail.com.";
   }
 
   if (typeof body.phone !== "string") {
@@ -72,8 +72,8 @@ function validateRegistration(body) {
     return "Enter a valid phone number.";
   }
 
-  if (typeof body.password !== "string" || body.password.length < 8 || Buffer.byteLength(body.password, "utf8") > 72) {
-    return "Password must be at least 8 characters and no more than 72 bytes.";
+  if (typeof body.password !== "string" || body.password.length < 4 || Buffer.byteLength(body.password, "utf8") > 72) {
+    return "Password must be at least 4 characters and no more than 72 bytes.";
   }
 
   if (body.confirmPassword !== body.password) {
@@ -84,12 +84,12 @@ function validateRegistration(body) {
 }
 
 function validateLogin(body) {
-  if (!isPlainObject(body) || typeof body.email !== "string" || typeof body.password !== "string") {
+  if (!isPlainObject(body) || !isGmailAddress(body.email) || typeof body.password !== "string" || !LOGIN_ROLES.has(body.role)) {
     return false;
   }
 
   const email = body.email.trim();
-  return email.length > 0 && email.length <= 255 && body.password.length > 0 && Buffer.byteLength(body.password, "utf8") <= 72;
+  return email.length > 0 && body.password.length > 0 && Buffer.byteLength(body.password, "utf8") <= 72;
 }
 
 function sendAuthConfigurationError(res) {
@@ -116,38 +116,15 @@ async function register(req, res) {
 
   let connection;
   try {
-    const passwordHash = await bcrypt.hash(req.body.password, BCRYPT_ROUNDS);
     connection = await pool.getConnection();
     await connection.beginTransaction();
-
-    const [userResult] = await connection.execute(
-      "INSERT INTO users (full_name, email, password_hash, role) VALUES (?, ?, ?, 'PATIENT')",
-      [fullName, email, passwordHash]
-    );
-
-    const patientCode = "MT-" + randomBytes(12).toString("hex").toUpperCase();
-    await connection.execute(
-      "INSERT INTO patients (user_id, patient_code, phone) VALUES (?, ?, ?)",
-      [userResult.insertId, patientCode, phone]
-    );
-
-    await writeAudit(connection, {
-      userId: userResult.insertId,
-      action: "PATIENT_REGISTERED",
-      entityType: "PATIENT",
-      details: { patientCode },
-    });
-
-    await connection.commit();
-
-    const user = {
-      id: String(userResult.insertId),
+    const user = await createPatientAccount(connection, {
       fullName,
       email,
-      role: "PATIENT",
-      patientCode,
-    };
-
+      password: req.body.password,
+      phone,
+    });
+    await connection.commit();
     setAuthCookie(res, createToken(user.id, secret));
     return res.status(201).json({ success: true, user });
   } catch (error) {
@@ -177,7 +154,7 @@ async function login(req, res) {
   if (!validateLogin(req.body)) {
     return res.status(400).json({
       success: false,
-      message: "Enter a valid email address and password.",
+      message: "Enter a Gmail address, password, and choose the matching account type.",
     });
   }
 
@@ -195,7 +172,7 @@ async function login(req, res) {
 
     const user = rows[0];
     const passwordMatches = user ? await bcrypt.compare(req.body.password, user.password_hash) : false;
-    if (!user || !passwordMatches || !user.is_active) {
+    if (!user || !passwordMatches || !user.is_active || user.role !== req.body.role) {
       return res.status(401).json({
         success: false,
         message: "Email or password is incorrect.",

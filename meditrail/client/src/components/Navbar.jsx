@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
+import { getRoleHomePath } from "../lib/roleRoutes.js";
 
 function Navbar() {
   const { pathname } = useLocation();
@@ -9,7 +10,7 @@ function Navbar() {
   const { user, logout } = useAuth();
   const [logoutError, setLogoutError] = useState("");
   const isHome = pathname === "/";
-  const workspacePath = user?.role === "ADMIN" ? "/admin" : user?.role === "DOCTOR" ? "/doctor" : "/dashboard";
+  const workspacePath = getRoleHomePath(user?.role);
 
   async function handleLogout() {
     setLogoutError("");

@@ -1,43 +1,30 @@
-meditrail/
-├── .gitignore
-├── README.md
-├── client/
-│   ├── .env.example
-│   ├── index.html
-│   ├── package.json
-│   └── src/
-│       ├── App.jsx
-│       ├── main.jsx
-│       ├── index.css
-│       ├── components/
-│       ├── pages/
-│       ├── layouts/
-│       ├── services/
-│       ├── hooks/
-│       ├── routes/
-│       └── context/
-├── server/
-│   └── src/
-│       ├── config/
-│       ├── middleware/
-│       ├── modules/
-│       │   ├── auth/
-│       │   ├── users/
-│       │   ├── patients/
-│       │   ├── doctors/
-│       │   ├── consultations/
-│       │   ├── prescriptions/
-│       │   ├── referrals/
-│       │   ├── documents/
-│       │   └── audit/
-│       ├── routes/
-│       └── utils/
-├── database/
-│   ├── migrations/
-│   └── seed/
-└── docs/
-    ├── requirements.md
-    ├── architecture.md
-    ├── api-spec.md
-    ├── testing.md
-    └── git-workflow.md
+D:\College Project/
+├── README.md                 # Setup, demo credentials, and commands
+└── meditrail/
+    ├── FOLDER-STRUCTURE.txt
+    ├── client/
+    │   ├── .env.example      # Vite API URL
+    │   ├── index.html
+    │   ├── package.json
+    │   └── src/
+    │       ├── App.jsx       # Frontend routes
+    │       ├── components/   # Navbar, footer, protected route
+    │       ├── context/      # Login session state
+    │       ├── lib/          # API and role route helpers
+    │       └── pages/        # Login, registration, dashboards
+    ├── server/
+    │   ├── .env.example      # Local MySQL and API settings
+    │   ├── package.json
+    │   ├── scripts/          # Database init, demo seed/reset, admin setup
+    │   ├── src/
+    │   │   ├── app.js
+    │   │   ├── config/       # MySQL connection
+    │   │   └── modules/      # Auth, patients, doctors, admin, audit
+    │   ├── test-auth.js
+    │   ├── test-workflows.js
+    │   ├── test-demo-users.js
+    │   └── test-db.js
+    ├── database/
+    │   ├── schema.sql
+    │   └── migrations/
+    └── docs/                 # Requirements, architecture, API, tests, demo flow

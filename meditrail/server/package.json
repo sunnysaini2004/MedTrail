@@ -8,8 +8,13 @@
     "dev": "node --watch src/server.js",
     "test:auth": "node test-auth.js",
     "test:workflows": "node test-workflows.js",
+    "test:demo": "node test-demo-users.js",
+    "db:check": "node test-db.js",
+    "db:init": "node scripts/init-database.js",
     "db:migrate:access": "node scripts/apply-access-migration.js",
-    "account:bootstrap-admin": "node scripts/bootstrap-admin.js"
+    "account:bootstrap-admin": "node scripts/bootstrap-admin.js",
+    "demo:seed": "node scripts/seed-demo.js",
+    "demo:reset": "node scripts/reset-demo.js"
   },
   "keywords": [],
   "author": "",

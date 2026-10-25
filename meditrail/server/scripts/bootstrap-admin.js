@@ -5,6 +5,7 @@ const { stdin, stdout } = require("node:process");
 const bcrypt = require("bcryptjs");
 const pool = require("../src/config/db");
 const { writeAudit } = require("../src/modules/audit/audit.service");
+const { isGmailAddress } = require("../src/modules/auth/email-validation");
 
 function promptHidden(label) {
   if (!stdin.isTTY || typeof stdin.setRawMode !== "function") {
@@ -57,8 +58,8 @@ async function bootstrapAdmin() {
   prompts.close();
   const password = await promptHidden("Admin password (input hidden): ");
 
-  if (fullName.length < 2 || fullName.length > 120 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || Buffer.byteLength(password, "utf8") < 8 || Buffer.byteLength(password, "utf8") > 72) {
-    throw new Error("Use a 2–120 character name, valid email, and password of 8–72 bytes.");
+  if (fullName.length < 2 || fullName.length > 120 || !isGmailAddress(email) || Buffer.byteLength(password, "utf8") < 8 || Buffer.byteLength(password, "utf8") > 72) {
+    throw new Error("Use a 2–120 character name, Gmail address, and password of 8–72 bytes.");
   }
 
   const [admins] = await pool.execute("SELECT id FROM users WHERE role = 'ADMIN' LIMIT 1");
@@ -84,7 +85,7 @@ async function bootstrapAdmin() {
     await connection.commit();
     console.log("Administrator account created. Keep the login details private.");
   } catch (error) {
-    await connection.rollback().catch(() => {});
+    await connection.rollback().catch(() => { });
     if (error.code === "ER_DUP_ENTRY") {
       throw new Error("That email address is already registered.");
     }

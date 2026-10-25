@@ -10,13 +10,15 @@ credentials and the server allows the configured `CLIENT_ORIGIN` only.
 
 ## Authentication
 
-- `POST /api/v1/auth/register` accepts `fullName`, `email`, `phone`, `password`,
+- `POST /api/v1/auth/register` accepts `fullName`, a Gmail `email`, `phone`, `password`,
   and `confirmPassword`. It always creates a `PATIENT` account, creates the
   patient profile in the same database transaction, hashes the password, and
   returns `201` with a public user object. A duplicate email returns `409`.
-- `POST /api/v1/auth/login` accepts `email` and `password`. A successful login
-  returns `200` and sets the signed `meditrail_token` cookie. Invalid credentials
-  return a generic `401` response.
+- `POST /api/v1/auth/login` accepts a Gmail `email`, `password`, and the selected
+  `role` (`PATIENT`, `DOCTOR`, or `ADMIN`). The database role must match the
+  selected role. A successful login returns `200` and sets the
+  `meditrail_token` cookie. Invalid credentials or a role mismatch return a
+  generic `401` response.
 - `POST /api/v1/auth/logout` clears the browser cookie.
 - `GET /api/v1/auth/me` requires the valid cookie and returns the current user's
   public account fields. Inactive or missing accounts are rejected.
@@ -39,12 +41,23 @@ Document endpoints are not implemented yet.
 
 ## Administration and doctor workflows
 
-- The first administrator is created locally with `npm run account:bootstrap-admin`
-  from `server/`; the password prompt is hidden. There is no public admin signup.
+- The local demo administrator is configured by `npm run demo:seed`; it creates
+  an admin if none exists or updates the one existing admin row. The seed stops
+  if multiple admins exist. `npm run account:bootstrap-admin` remains available
+  for a manually provisioned Gmail administrator. There is no public admin signup.
 - `GET /api/v1/admin/doctors` and `GET /api/v1/admin/patients` require `ADMIN`.
-- `POST /api/v1/admin/doctors` requires `ADMIN` and accepts `fullName`, `email`,
+- `POST /api/v1/admin/patients` creates a PATIENT account; it never accepts a
+  requested role. `DELETE /api/v1/admin/patients/:patientCode` removes the
+  patient's consultations, prescriptions/items, referrals, grants, profile, and
+  account in foreign-key order while retaining audit history.
+- `POST /api/v1/admin/doctors` requires `ADMIN` and accepts `fullName`, a Gmail `email`,
   `password`, `specialty`, and optional `registrationNumber`. The server assigns
   the `DOCTOR` role.
+- `DELETE /api/v1/admin/doctors/:doctorUserId` removes the doctor account and
+  clinical records linked to that doctor; other user accounts remain.
+- `PUT /api/v1/admin/patient-assignment` accepts `patientCode` and
+  `doctorUserId`. It revokes the patient's other active grants before assigning
+  the selected doctor.
 - `GET /api/v1/admin/patient-access`, `POST /api/v1/admin/patient-access`, and
   `PATCH /api/v1/admin/patient-access` require `ADMIN`. Grant/revoke requests
   use `patientCode` and `doctorUserId`. Grants are stored in the additive

@@ -65,11 +65,13 @@ function Register() {
                 id="email"
                 name="email"
                 type="email"
-                placeholder="Enter your email"
+                placeholder="name@gmail.com"
+                autoCapitalize="none"
                 autoComplete="email"
                 maxLength={255}
                 required
               />
+              <p className="mt-1 text-sm text-slate-600">Use a Gmail address. Registration creates a patient account only.</p>
             </div>
 
             <div>
@@ -93,7 +95,7 @@ function Register() {
                 type="password"
                 placeholder="Create a password"
                 autoComplete="new-password"
-                minLength={8}
+                minLength={4}
                 maxLength={72}
                 required
               />
@@ -107,7 +109,7 @@ function Register() {
                 type="password"
                 placeholder="Re-enter your password"
                 autoComplete="new-password"
-                minLength={8}
+                minLength={4}
                 maxLength={72}
                 required
               />

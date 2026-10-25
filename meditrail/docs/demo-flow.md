@@ -1,26 +1,24 @@
-# MediTrail Demonstration Flow
+# MediTrail Demo Flow
 
-Use synthetic data only. The demo covers patient registration, account
-provisioning, explicit doctor access, and a treatment timeline.
+Use only the synthetic accounts and records seeded by MediTrail. Do not enter real patient information.
 
-1. Install dependencies in `client/` and `server/` and configure `server/.env`
-   from `server/.env.example`.
-2. Start MySQL and run `npm run db:migrate:access` from `server/`.
-3. Create the first administrator with `npm run account:bootstrap-admin` from
-   `server/`; the password is entered through a hidden terminal prompt.
-4. Start the API with `npm start` in `server/` and Vite with `npm run dev` in
-   `client/`.
-5. Register a synthetic patient. Confirm that registration opens the patient
-   dashboard with a generated patient code and empty timeline.
-6. Log in as administrator, create two synthetic doctor accounts, and grant
-   one doctor access to the patient.
-7. Log in as that doctor, record a consultation, create a prescription, and
-   send a referral to the second doctor.
-8. Log in as the receiving doctor, accept the referral, view the patient
-   history, and complete the referral.
-9. Log back in as the patient and confirm that the dashboard shows the
-   consultation, prescription, and referral history.
-10. Revoke the first doctor's grant and verify that the doctor can no longer
-    read the patient's history.
+## Set up the demo
 
-Do not use real patient details or present the prototype as clinically ready.
+Follow the PowerShell setup in the root README. In the server terminal, run db:init and db:check, then run demo:seed.
+
+- demo:seed does not remove patient accounts. It creates the fixed synthetic patient if absent, creates or updates the fixed demo doctor, and creates or updates the single administrator.
+- To remove all PATIENT-role accounts and their linked records before reseeding, run demo:reset from an interactive PowerShell terminal and type RESET MEDTRAIL PATIENTS. Read the warning first. Admin and doctor accounts remain; audit history remains. The command only works against the meditrail database.
+- Demo emails and passwords are in the README.
+
+## Demonstration sequence
+
+1. Open the home page and show the three login choices.
+2. Sign in as the patient using the synthetic demo credentials. Show the assigned doctor and sample consultation/prescription activity.
+3. Sign out and sign in as the doctor. Show the assigned patient and the consultation, prescription, and referral forms.
+4. Sign out and sign in as the admin. Add a synthetic doctor or patient, then assign a patient to a doctor.
+5. Sign in as that doctor and show that only assigned patients are listed.
+6. Send a referral to another doctor. The receiving doctor accepts it and gets patient access.
+7. From Admin, change an assignment or revoke a grant and show that the previous doctor can no longer access that patient's record.
+8. If demonstrating deletion, use a disposable synthetic account and read the confirmation prompt. Patient deletion removes linked consultations, prescriptions/items, referrals, and grants, but retains audit history.
+
+This prototype is for academic demonstration only and is not intended for real clinical use.

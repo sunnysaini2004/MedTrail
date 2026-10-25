@@ -11,7 +11,7 @@ const app = require("./src/app");
 const pool = require("./src/config/db");
 
 async function runAuthSmokeTest() {
-  const testEmail = "meditrail-" + randomUUID() + "@example.invalid";
+  const testEmail = "meditrail-" + randomUUID() + "@gmail.com";
   const testPassword = randomBytes(18).toString("base64url") + "Aa1!";
   const testAccount = {
     fullName: "Synthetic MediTrail Test",
@@ -58,9 +58,16 @@ async function runAuthSmokeTest() {
     const invalid = await request("/api/v1/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...testAccount, password: "short", confirmPassword: "short" }),
+      body: JSON.stringify({ ...testAccount, password: "abc", confirmPassword: "abc" }),
     });
     assert.equal(invalid.response.status, 400, "short passwords should be rejected");
+
+    const invalidDomain = await request("/api/v1/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...testAccount, email: testEmail.replace("@gmail.com", "@example.com") }),
+    });
+    assert.equal(invalidDomain.response.status, 400, "registration should only accept Gmail addresses");
 
     const registered = await request("/api/v1/auth/register", {
       method: "POST",
@@ -91,14 +98,21 @@ async function runAuthSmokeTest() {
     const badLogin = await request("/api/v1/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: testEmail, password: "incorrect-password" }),
+      body: JSON.stringify({ email: testEmail, password: "incorrect-password", role: "PATIENT" }),
     });
     assert.equal(badLogin.response.status, 401, "incorrect password should not authenticate");
+
+    const wrongRole = await request("/api/v1/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: testEmail, password: testPassword, role: "ADMIN" }),
+    });
+    assert.equal(wrongRole.response.status, 401, "a patient must not log in through another role option");
 
     const loggedIn = await request("/api/v1/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: testEmail, password: testPassword }),
+      body: JSON.stringify({ email: testEmail, password: testPassword, role: "PATIENT" }),
     });
     assert.equal(loggedIn.response.status, 200, "valid credentials should authenticate");
     const cookie = (loggedIn.response.headers.get("set-cookie") || "").split(";")[0];
