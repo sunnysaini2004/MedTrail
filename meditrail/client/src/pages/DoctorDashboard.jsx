@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Navbar from "../components/Navbar.jsx";
 import Footer from "../components/Footer.jsx";
 import { apiRequest } from "../lib/api.js";
@@ -14,49 +14,69 @@ function DoctorDashboard() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [workspaceFailures, setWorkspaceFailures] = useState({});
   const [message, setMessage] = useState("");
+  const consultationRequestId = useRef(0);
 
   const loadWorkspace = useCallback(async () => {
     setLoading(true);
     setError("");
+    const sections = [
+      { key: "profile", path: "/doctor/me", dataKey: "doctor", set: setDoctor },
+      { key: "patients", path: "/doctor/patients", dataKey: "patients", set: setPatients, isList: true },
+      { key: "referrals", path: "/doctor/referrals/inbox", dataKey: "referrals", set: setReferrals, isList: true },
+      { key: "referralDoctors", path: "/doctor/referrals/doctors", dataKey: "doctors", set: setReferralDoctors, isList: true },
+    ];
     try {
-      const [profileResult, patientResult, referralResult, doctorResult] = await Promise.all([
-        apiRequest("/doctor/me"),
-        apiRequest("/doctor/patients"),
-        apiRequest("/doctor/referrals/inbox"),
-        apiRequest("/doctor/referrals/doctors"),
-      ]);
-      setDoctor(profileResult.doctor);
-      setPatients(patientResult.patients);
-      setReferrals(referralResult.referrals);
-      setReferralDoctors(doctorResult.doctors);
-      setPatientCode((current) => current || patientResult.patients[0]?.patientCode || "");
-    } catch (requestError) {
-      setError(requestError.message);
+      const results = await Promise.allSettled(sections.map((section) => apiRequest(section.path)));
+      const failures = {};
+      results.forEach((result, index) => {
+        const section = sections[index];
+        if (result.status === "rejected") {
+          failures[section.key] = result.reason?.message || "Request failed.";
+          return;
+        }
+
+        const data = result.value?.[section.dataKey];
+        if (section.isList ? !Array.isArray(data) : !data || typeof data !== "object") {
+          failures[section.key] = "The server returned an unexpected response.";
+          return;
+        }
+        section.set(data);
+        if (section.key === "patients") {
+          setPatientCode((current) => data.some((item) => item.patientCode === current)
+            ? current
+            : data[0]?.patientCode || "");
+        }
+      });
+      setWorkspaceFailures(failures);
     } finally {
       setLoading(false);
     }
   }, []);
 
   const loadConsultations = useCallback(async (code) => {
+    const requestId = ++consultationRequestId.current;
+    setConsultations([]);
+    setConsultationId("");
     if (!code) {
-      setConsultations([]);
-      setConsultationId("");
       return;
     }
     try {
       const result = await apiRequest("/doctor/patients/" + encodeURIComponent(code) + "/consultations");
+      if (requestId !== consultationRequestId.current) return;
       setConsultations(result.consultations);
-      setConsultationId((current) => result.consultations.some((item) => String(item.id) === current)
-        ? current
-        : String(result.consultations[0]?.id || ""));
+      setConsultationId(String(result.consultations[0]?.id || ""));
     } catch (requestError) {
-      setError(requestError.message);
+      if (requestId === consultationRequestId.current) setError(requestError.message);
     }
   }, []);
 
   useEffect(() => { loadWorkspace(); }, [loadWorkspace]);
-  useEffect(() => { loadConsultations(patientCode); }, [patientCode, loadConsultations]);
+  useEffect(() => {
+    loadConsultations(patientCode);
+    return () => { consultationRequestId.current += 1; };
+  }, [patientCode, loadConsultations]);
 
   async function submitForm(event, path, transform, successMessage) {
     event.preventDefault();
@@ -109,6 +129,11 @@ function DoctorDashboard() {
         </header>
 
         {error && <p className="rounded-lg border border-red-200 bg-red-50 p-3 text-red-800" role="alert">{error}</p>}
+        {Object.keys(workspaceFailures).length > 0 && <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900" role="alert">
+          <p className="font-semibold">Some doctor sections could not load. The others can still be used.</p>
+          <ul className="mt-2 list-inside list-disc">{Object.entries(workspaceFailures).map(([section, reason]) => <li key={section}><strong>{section}:</strong> {reason}</li>)}</ul>
+          <button className="mt-3 rounded-lg border border-amber-400 bg-white px-3 py-2 font-semibold disabled:opacity-60" type="button" onClick={loadWorkspace} disabled={loading}>{loading ? "Retrying..." : "Retry dashboard data"}</button>
+        </div>}
         {message && <p className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-emerald-800" role="status">{message}</p>}
         {loading && <p aria-live="polite">Loading doctor workspace...</p>}
 

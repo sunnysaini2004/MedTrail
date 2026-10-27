@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import Navbar from "../components/Navbar.jsx";
 import Footer from "../components/Footer.jsx";
+import PasswordInput from "../components/PasswordInput.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import {
   canRoleAccessPath,
@@ -66,6 +67,10 @@ function Login() {
     };
     try {
       const user = await login(credentials);
+      if (user.mustChangePassword) {
+        navigate("/change-password", { replace: true });
+        return;
+      }
       const roleHome = getRoleHomePath(user.role);
       const requestedPath = location.state?.from?.pathname;
       const destination = canRoleAccessPath(user.role, requestedPath)
@@ -109,10 +114,9 @@ function Login() {
 
             <div>
               <label htmlFor="password">Password</label>
-              <input
+              <PasswordInput
                 id="password"
                 name="password"
-                type="password"
                 placeholder="Enter your password"
                 autoComplete="current-password"
                 maxLength={72}

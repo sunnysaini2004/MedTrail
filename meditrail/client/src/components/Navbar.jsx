@@ -9,6 +9,7 @@ function Navbar() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [logoutError, setLogoutError] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
   const isHome = pathname === "/";
   const workspacePath = getRoleHomePath(user?.role);
 
@@ -29,23 +30,35 @@ function Navbar() {
         MediTrail
       </Link>
 
-      <nav aria-label="Main navigation">
+      <button
+        className="navbar-menu-button"
+        type="button"
+        aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
+        aria-expanded={menuOpen}
+        aria-controls="main-navigation"
+        onClick={() => setMenuOpen((open) => !open)}
+      >
+        <span aria-hidden="true">{menuOpen ? "×" : "☰"}</span>
+      </button>
+
+      <nav id="main-navigation" className={menuOpen ? "navbar-menu open" : "navbar-menu"} aria-label="Main navigation">
         {isHome ? (
           <>
-            <a href="#home">Home</a>
-            <a href="#about">About</a>
-            <a href="#services">Services</a>
-            <a href="#contact">Contact</a>
-            {user && <Link to={workspacePath}>Workspace</Link>}
+            <a href="#home" onClick={() => setMenuOpen(false)}>Home</a>
+            <a href="#about" onClick={() => setMenuOpen(false)}>About</a>
+            <a href="#services" onClick={() => setMenuOpen(false)}>Services</a>
+            <a href="#contact" onClick={() => setMenuOpen(false)}>Contact</a>
+            {user && <Link to={workspacePath} onClick={() => setMenuOpen(false)}>Workspace</Link>}
           </>
         ) : (
           <>
-            <Link to="/">Home</Link>
-            {user && <Link to={workspacePath}>Workspace</Link>}
+            <Link to="/" onClick={() => setMenuOpen(false)}>Home</Link>
+            {user && <Link to={workspacePath} onClick={() => setMenuOpen(false)}>Workspace</Link>}
           </>
         )}
       </nav>
 
+      <div className="navbar-actions">
       {user ? (
         <button className="login-link border-0 bg-transparent p-0" type="button" onClick={handleLogout}>
           Log out
@@ -59,6 +72,7 @@ function Navbar() {
           Login
         </Link>
       )}
+      </div>
       {logoutError && <span className="text-sm text-red-700" role="alert">{logoutError}</span>}
     </header>
   );

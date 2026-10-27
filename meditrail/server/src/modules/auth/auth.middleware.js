@@ -42,7 +42,7 @@ async function requireAuth(req, res, next) {
 
   try {
     const [rows] = await pool.execute(
-      "SELECT id, full_name, email, role FROM users WHERE id = ? AND is_active = TRUE LIMIT 1",
+      "SELECT id, full_name, email, role, must_change_password, session_version FROM users WHERE id = ? AND is_active = TRUE LIMIT 1",
       [claims.sub]
     );
 
@@ -53,7 +53,32 @@ async function requireAuth(req, res, next) {
       });
     }
 
-    req.authUser = rows[0];
+    const user = rows[0];
+    const tokenVersion = claims.ver === undefined ? 0 : Number(claims.ver);
+    if (!Number.isSafeInteger(tokenVersion) || tokenVersion !== Number(user.session_version)) {
+      return res.status(401).json({
+        success: false,
+        message: "Your session is no longer valid. Please log in again.",
+      });
+    }
+
+    req.authUser = {
+      ...user,
+      mustChangePassword: Boolean(user.must_change_password),
+    };
+    const allowedDuringPasswordChange = new Set([
+      "/api/v1/auth/me",
+      "/api/v1/auth/logout",
+      "/api/v1/auth/change-password",
+    ]);
+    const requestPath = req.originalUrl.split("?")[0];
+    if (req.authUser.mustChangePassword && !allowedDuringPasswordChange.has(requestPath)) {
+      return res.status(403).json({
+        success: false,
+        passwordChangeRequired: true,
+        message: "Change your temporary password before using MediTrail.",
+      });
+    }
     return next();
   } catch {
     return res.status(500).json({

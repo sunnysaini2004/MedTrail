@@ -35,8 +35,14 @@ export async function apiRequest(path, options = {}) {
   }
 
   if (!response.ok) {
+    const routeHint = response.status === 404
+      ? " Requested: " + (options.method || "GET") + " " + API_BASE_URL + path + "."
+      : "";
+    const serverVersionHint = response.status === 404 && payload.message === "API route not found"
+      ? " The backend may be an older MediTrail process; restart it from the current meditrail/server folder."
+      : "";
     throw new ApiError(
-      payload.message || "The request could not be completed.",
+      (payload.message || "The request could not be completed.") + routeHint + serverVersionHint,
       response.status
     );
   }

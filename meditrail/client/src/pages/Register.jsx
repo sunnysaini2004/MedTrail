@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar.jsx";
 import Footer from "../components/Footer.jsx";
+import PasswordInput from "../components/PasswordInput.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 
 function Register() {
@@ -89,10 +90,9 @@ function Register() {
 
             <div>
               <label htmlFor="password">Password</label>
-              <input
+              <PasswordInput
                 id="password"
                 name="password"
-                type="password"
                 placeholder="Create a password"
                 autoComplete="new-password"
                 minLength={4}
@@ -103,10 +103,9 @@ function Register() {
 
             <div>
               <label htmlFor="confirmPassword">Confirm Password</label>
-              <input
+              <PasswordInput
                 id="confirmPassword"
                 name="confirmPassword"
-                type="password"
                 placeholder="Re-enter your password"
                 autoComplete="new-password"
                 minLength={4}

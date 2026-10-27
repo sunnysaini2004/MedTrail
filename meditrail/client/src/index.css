@@ -64,6 +64,25 @@ a {
   font-size: 14px;
 }
 
+.navbar-menu-button {
+  display: none;
+  min-width: 42px;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #cddbd9;
+  border-radius: 10px;
+  background: white;
+  color: #0f766e;
+  font-size: 20px;
+}
+
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .navbar nav a:hover,
 .login-link:hover {
   color: #0f766e;
@@ -224,15 +243,38 @@ a {
 
 @media (max-width: 700px) {
   .navbar {
+    position: relative;
     flex-wrap: wrap;
     padding: 16px 5%;
   }
 
-  .navbar nav {
+  .navbar-menu-button {
+    display: inline-flex;
+    order: 2;
+  }
+
+  .navbar-actions {
     order: 3;
+    margin-left: auto;
+  }
+
+  .navbar nav {
+    display: none;
+    order: 4;
     width: 100%;
-    justify-content: space-between;
+    justify-content: flex-start;
+    align-items: center;
+    flex-wrap: wrap;
     gap: 12px;
+    padding-top: 12px;
+  }
+
+  .navbar nav.open {
+    display: flex;
+  }
+
+  .navbar nav a {
+    padding: 8px 4px;
   }
 
   .hero {
@@ -295,6 +337,10 @@ a {
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease;
+}
+
+.auth-form span.relative input {
+  padding-right: 3rem;
 }
 
 .auth-form input::placeholder {

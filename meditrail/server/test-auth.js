@@ -136,8 +136,23 @@ async function runAuthSmokeTest() {
     assert.equal(anonymous.response.status, 401, "private account route should reject anonymous requests");
     const anonymousDashboard = await request("/api/v1/patient/dashboard");
     assert.equal(anonymousDashboard.response.status, 401, "patient dashboard should reject anonymous requests");
+    const anonymousAdminAccounts = await request("/api/v1/admin/accounts");
+    assert.equal(anonymousAdminAccounts.response.status, 401, "the mounted admin accounts route should reject an anonymous request instead of returning 404");
+    const invalidSession = await request("/api/v1/admin/accounts", {
+      headers: { Cookie: "meditrail_token=not-a-valid-token" },
+    });
+    assert.equal(invalidSession.response.status, 401, "an invalid cookie must not access admin account management");
 
-    console.log("Auth and dashboard smoke checks passed: registration, validation, duplicate email, role restriction, password hash, login, cookie session, /me access, dashboard data, and anonymous access rejection.");
+    const loggedOut = await request("/api/v1/auth/logout", {
+      method: "POST",
+      headers: { Cookie: cookie },
+    });
+    assert.equal(loggedOut.response.status, 200, "logout should clear the login cookie");
+    assert.match(loggedOut.response.headers.get("set-cookie") || "", /Expires=Thu, 01 Jan 1970 00:00:00 GMT/i);
+    const sessionAfterLogout = await request("/api/v1/auth/me");
+    assert.equal(sessionAfterLogout.response.status, 401, "a client without the cleared cookie should no longer be authenticated");
+
+    console.log("Auth smoke checks passed: patient-only registration, validation, bcrypt hash, role-specific login, session restoration, patient dashboard, mounted admin-route authorization, invalid cookies, logout, and anonymous access rejection.");
   } finally {
     const [testUsers] = await pool.execute("SELECT id FROM users WHERE email = ?", [testEmail]);
     if (testUsers.length > 0) {

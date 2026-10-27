@@ -1,4 +1,5 @@
 const bcrypt = require("bcryptjs");
+const { randomBytes } = require("node:crypto");
 const pool = require("../../config/db");
 const { writeAudit } = require("../audit/audit.service");
 const { isGmailAddress } = require("../auth/email-validation");
@@ -17,7 +18,7 @@ function validId(value) {
 async function getDoctors(req, res) {
   try {
     const [rows] = await pool.execute(
-      "SELECT d.user_id AS userId, u.full_name AS fullName, u.email, d.specialty, d.registration_number AS registrationNumber FROM doctors d JOIN users u ON u.id = d.user_id WHERE u.is_active = TRUE ORDER BY u.full_name LIMIT 500"
+      "SELECT d.user_id AS userId, u.full_name AS fullName, u.email, u.is_active AS isActive, u.created_at AS createdAt, d.created_at AS doctorCreatedAt, d.specialty, d.registration_number AS registrationNumber, (SELECT COUNT(DISTINCT a.patient_id) FROM doctor_patient_access a WHERE a.doctor_id = d.id AND a.status = 'ACTIVE') AS assignedPatientCount FROM doctors d JOIN users u ON u.id = d.user_id ORDER BY u.full_name LIMIT 500"
     );
     return res.status(200).json({ success: true, doctors: rows });
   } catch {
@@ -28,11 +29,78 @@ async function getDoctors(req, res) {
 async function getPatients(req, res) {
   try {
     const [rows] = await pool.execute(
-      "SELECT p.patient_code AS patientCode, u.full_name AS fullName, u.email, p.phone, p.blood_group AS bloodGroup, (SELECT assigned_user.full_name FROM doctor_patient_access a JOIN doctors d ON d.id = a.doctor_id JOIN users assigned_user ON assigned_user.id = d.user_id WHERE a.patient_id = p.id AND a.status = 'ACTIVE' ORDER BY a.granted_at DESC LIMIT 1) AS assignedDoctorName, (SELECT d.user_id FROM doctor_patient_access a JOIN doctors d ON d.id = a.doctor_id WHERE a.patient_id = p.id AND a.status = 'ACTIVE' ORDER BY a.granted_at DESC LIMIT 1) AS assignedDoctorUserId FROM patients p JOIN users u ON u.id = p.user_id WHERE u.is_active = TRUE ORDER BY u.full_name LIMIT 500"
+      "SELECT p.user_id AS userId, p.patient_code AS patientCode, u.full_name AS fullName, u.email, u.is_active AS isActive, u.created_at AS createdAt, p.date_of_birth AS dateOfBirth, p.phone, p.blood_group AS bloodGroup, (SELECT assigned_user.full_name FROM doctor_patient_access a JOIN doctors d ON d.id = a.doctor_id JOIN users assigned_user ON assigned_user.id = d.user_id WHERE a.patient_id = p.id AND a.status = 'ACTIVE' ORDER BY a.granted_at DESC LIMIT 1) AS assignedDoctorName, (SELECT assigned_user.email FROM doctor_patient_access a JOIN doctors d ON d.id = a.doctor_id JOIN users assigned_user ON assigned_user.id = d.user_id WHERE a.patient_id = p.id AND a.status = 'ACTIVE' ORDER BY a.granted_at DESC LIMIT 1) AS assignedDoctorEmail, (SELECT d.specialty FROM doctor_patient_access a JOIN doctors d ON d.id = a.doctor_id WHERE a.patient_id = p.id AND a.status = 'ACTIVE' ORDER BY a.granted_at DESC LIMIT 1) AS assignedDoctorSpecialty, (SELECT d.user_id FROM doctor_patient_access a JOIN doctors d ON d.id = a.doctor_id WHERE a.patient_id = p.id AND a.status = 'ACTIVE' ORDER BY a.granted_at DESC LIMIT 1) AS assignedDoctorUserId FROM patients p JOIN users u ON u.id = p.user_id ORDER BY u.full_name LIMIT 500"
     );
     return res.status(200).json({ success: true, patients: rows });
   } catch {
     return res.status(500).json({ success: false, message: "Unable to load patients right now." });
+  }
+}
+
+async function getAccounts(req, res) {
+  const search = typeof req.query.search === "string" ? req.query.search.trim() : "";
+  if (search.length > 120) {
+    return res.status(400).json({ success: false, message: "Search must be no longer than 120 characters." });
+  }
+
+  const like = "%" + search.replace(/[\\%_]/g, "\\$&") + "%";
+  try {
+    const [rows] = await pool.execute(
+      "SELECT u.id, u.full_name AS fullName, u.email, u.role, u.is_active AS isActive, u.created_at AS createdAt, p.patient_code AS patientCode, d.specialty FROM users u LEFT JOIN patients p ON p.user_id = u.id LEFT JOIN doctors d ON d.user_id = u.id WHERE u.role IN ('PATIENT', 'DOCTOR') AND (? = '' OR u.full_name LIKE ? ESCAPE '\\\\' OR u.email LIKE ? ESCAPE '\\\\' OR CAST(u.id AS CHAR) LIKE ? ESCAPE '\\\\') ORDER BY u.created_at DESC LIMIT 500",
+      [search, like, like, like]
+    );
+    return res.status(200).json({ success: true, accounts: rows });
+  } catch {
+    return res.status(500).json({ success: false, message: "Unable to search accounts right now." });
+  }
+}
+
+async function resetAccountPassword(req, res) {
+  if (!validId(req.params.userId)) {
+    return res.status(400).json({ success: false, message: "Choose a valid patient or doctor account." });
+  }
+
+  const temporaryPassword = randomBytes(18).toString("base64url");
+  const passwordHash = await bcrypt.hash(temporaryPassword, 12);
+  let connection;
+  try {
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+    const [accounts] = await connection.execute(
+      "SELECT id, role, is_active FROM users WHERE id = ? AND role IN ('PATIENT', 'DOCTOR') LIMIT 1 FOR UPDATE",
+      [String(req.params.userId)]
+    );
+    if (!accounts.length) {
+      await connection.rollback();
+      return res.status(404).json({ success: false, message: "Patient or doctor account was not found." });
+    }
+    if (!accounts[0].is_active) {
+      await connection.rollback();
+      return res.status(409).json({ success: false, message: "This account is inactive. Reactivate it before resetting its password." });
+    }
+
+    await connection.execute(
+      "UPDATE users SET password_hash = ?, must_change_password = TRUE, session_version = session_version + 1 WHERE id = ?",
+      [passwordHash, accounts[0].id]
+    );
+    await writeAudit(connection, {
+      userId: req.authUser.id,
+      action: "ACCOUNT_TEMP_PASSWORD_ISSUED",
+      entityType: "USER",
+      entityId: accounts[0].id,
+      details: { targetUserId: String(accounts[0].id), targetRole: accounts[0].role, method: "temporary_password" },
+    });
+    await connection.commit();
+    return res.status(200).json({
+      success: true,
+      temporaryPassword,
+      message: "This temporary password is shown once. The account must change it before using MediTrail.",
+    });
+  } catch {
+    if (connection) await connection.rollback().catch(() => {});
+    return res.status(500).json({ success: false, message: "Unable to reset this account's password right now." });
+  } finally {
+    if (connection) connection.release();
   }
 }
 
@@ -418,6 +486,8 @@ module.exports = {
   getDoctors,
   getPatients,
   getPatientAccess,
+  getAccounts,
+  resetAccountPassword,
   grantPatientAccess,
   revokePatientAccess,
 };

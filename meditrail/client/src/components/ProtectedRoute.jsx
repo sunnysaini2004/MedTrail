@@ -18,6 +18,14 @@ function ProtectedRoute({ children, allowedRoles = ["PATIENT"] }) {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
+  if (user.mustChangePassword && location.pathname !== "/change-password") {
+    return <Navigate to="/change-password" replace />;
+  }
+
+  if (!user.mustChangePassword && location.pathname === "/change-password") {
+    return <Navigate to={getRoleHomePath(user.role)} replace />;
+  }
+
   if (!allowedRoles.includes(user.role)) {
     return <Navigate to={getRoleHomePath(user.role)} replace />;
   }

@@ -12,6 +12,7 @@ import Login from "./pages/Login.jsx";
 import PatientDashboard from "./pages/PatientDashboard.jsx";
 import DoctorDashboard from "./pages/DoctorDashboard.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
+import ChangePassword from "./pages/ChangePassword.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
 
@@ -26,6 +27,14 @@ function App() {
 
           <Route path="/login" element={<Login />} />
           <Route path="/login/:role" element={<Login />} />
+          <Route
+            path="/change-password"
+            element={
+              <ProtectedRoute allowedRoles={["PATIENT", "DOCTOR", "ADMIN"]}>
+                <ChangePassword />
+              </ProtectedRoute>
+            }
+          />
 
           <Route
             path="/dashboard"

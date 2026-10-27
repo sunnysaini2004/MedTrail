@@ -28,8 +28,8 @@ function clearAuthCookie(res) {
   });
 }
 
-function createToken(userId, secret) {
-  return jwt.sign({}, secret, {
+function createToken(userId, secret, sessionVersion = 0) {
+  return jwt.sign({ ver: Number(sessionVersion) || 0 }, secret, {
     algorithm: "HS256",
     subject: String(userId),
     expiresIn: TOKEN_TTL_SECONDS,
@@ -39,10 +39,11 @@ function createToken(userId, secret) {
 function publicUser(row) {
   return {
     id: String(row.id),
-    fullName: row.full_name,
+    fullName: row.full_name ?? row.fullName,
     email: row.email,
     role: row.role,
     patientCode: row.patient_code || null,
+    mustChangePassword: Boolean(row.mustChangePassword ?? row.must_change_password),
   };
 }
 
@@ -125,7 +126,7 @@ async function register(req, res) {
       phone,
     });
     await connection.commit();
-    setAuthCookie(res, createToken(user.id, secret));
+    setAuthCookie(res, createToken(user.id, secret, user.sessionVersion));
     return res.status(201).json({ success: true, user });
   } catch (error) {
     if (connection) {
@@ -166,7 +167,7 @@ async function login(req, res) {
   const email = req.body.email.trim().toLowerCase();
   try {
     const [rows] = await pool.execute(
-      "SELECT u.id, u.full_name, u.email, u.password_hash, u.role, u.is_active, p.patient_code FROM users u LEFT JOIN patients p ON p.user_id = u.id WHERE u.email = ? LIMIT 1",
+      "SELECT u.id, u.full_name, u.email, u.password_hash, u.role, u.is_active, u.must_change_password AS mustChangePassword, u.session_version AS sessionVersion, p.patient_code FROM users u LEFT JOIN patients p ON p.user_id = u.id WHERE u.email = ? LIMIT 1",
       [email]
     );
 
@@ -179,7 +180,7 @@ async function login(req, res) {
       });
     }
 
-    setAuthCookie(res, createToken(user.id, secret));
+    setAuthCookie(res, createToken(user.id, secret, user.sessionVersion));
     return res.status(200).json({ success: true, user: publicUser(user) });
   } catch {
     return res.status(500).json({
@@ -197,7 +198,7 @@ function logout(req, res) {
 async function getCurrentUser(req, res) {
   try {
     const [rows] = await pool.execute(
-      "SELECT u.id, u.full_name, u.email, u.role, p.patient_code FROM users u LEFT JOIN patients p ON p.user_id = u.id WHERE u.id = ? LIMIT 1",
+      "SELECT u.id, u.full_name, u.email, u.role, u.must_change_password AS mustChangePassword, p.patient_code FROM users u LEFT JOIN patients p ON p.user_id = u.id WHERE u.id = ? LIMIT 1",
       [req.authUser.id]
     );
 
@@ -214,4 +215,62 @@ async function getCurrentUser(req, res) {
   }
 }
 
-module.exports = { register, login, logout, getCurrentUser };
+async function changePassword(req, res) {
+  const body = req.body;
+  if (
+    !isPlainObject(body) ||
+    typeof body.password !== "string" || body.password.length < 8 ||
+    Buffer.byteLength(body.password, "utf8") > 72 ||
+    body.confirmPassword !== body.password
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: "Enter matching passwords that are at least 8 characters and no more than 72 bytes.",
+    });
+  }
+
+  const secret = getJwtSecret();
+  if (!secret) return sendAuthConfigurationError(res);
+
+  let connection;
+  try {
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+    const [rows] = await connection.execute(
+      "SELECT id, full_name AS fullName, email, role, password_hash AS passwordHash, must_change_password AS mustChangePassword, session_version AS sessionVersion, (SELECT patient_code FROM patients WHERE user_id = users.id LIMIT 1) AS patientCode FROM users WHERE id = ? AND is_active = TRUE LIMIT 1 FOR UPDATE",
+      [req.authUser.id]
+    );
+    const user = rows[0];
+    if (!user || !user.mustChangePassword) {
+      await connection.rollback();
+      return res.status(403).json({ success: false, message: "A temporary-password change is not pending for this account." });
+    }
+
+    if (await bcrypt.compare(body.password, user.passwordHash)) {
+      await connection.rollback();
+      return res.status(400).json({ success: false, message: "Choose a new password different from the temporary password." });
+    }
+
+    const passwordHash = await bcrypt.hash(body.password, 12);
+    const nextSessionVersion = Number(user.sessionVersion) + 1;
+    await connection.execute(
+      "UPDATE users SET password_hash = ?, must_change_password = FALSE, session_version = ? WHERE id = ?",
+      [passwordHash, nextSessionVersion, user.id]
+    );
+    await connection.commit();
+
+    setAuthCookie(res, createToken(user.id, secret, nextSessionVersion));
+    return res.status(200).json({
+      success: true,
+      user: publicUser({ ...user, mustChangePassword: false }),
+      message: "Your password has been changed.",
+    });
+  } catch {
+    if (connection) await connection.rollback().catch(() => {});
+    return res.status(500).json({ success: false, message: "Unable to change the password right now." });
+  } finally {
+    if (connection) connection.release();
+  }
+}
+
+module.exports = { register, login, logout, getCurrentUser, changePassword };

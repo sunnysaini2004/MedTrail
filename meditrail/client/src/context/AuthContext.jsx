@@ -54,6 +54,16 @@ export function AuthProvider({ children }) {
     return result.user;
   }, []);
 
+  const changePassword = useCallback(async (details) => {
+    const result = await apiRequest("/auth/change-password", {
+      method: "POST",
+      body: JSON.stringify(details),
+    });
+    setUser(result.user);
+    setAuthError("");
+    return result.user;
+  }, []);
+
   const logout = useCallback(async () => {
     try {
       await apiRequest("/auth/logout", { method: "POST" });
@@ -63,8 +73,8 @@ export function AuthProvider({ children }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, loading, authError, refreshUser, createAccount, login, logout }),
-    [user, loading, authError, refreshUser, createAccount, login, logout]
+    () => ({ user, loading, authError, refreshUser, createAccount, login, changePassword, logout }),
+    [user, loading, authError, refreshUser, createAccount, login, changePassword, logout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

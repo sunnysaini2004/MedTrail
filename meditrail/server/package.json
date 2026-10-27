@@ -12,6 +12,7 @@
     "db:check": "node test-db.js",
     "db:init": "node scripts/init-database.js",
     "db:migrate:access": "node scripts/apply-access-migration.js",
+    "db:migrate:account-recovery": "node scripts/apply-account-recovery-migration.js",
     "account:bootstrap-admin": "node scripts/bootstrap-admin.js",
     "demo:seed": "node scripts/seed-demo.js",
     "demo:reset": "node scripts/reset-demo.js"

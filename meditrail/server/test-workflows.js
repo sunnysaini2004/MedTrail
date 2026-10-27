@@ -248,14 +248,94 @@ async function runWorkflowSmokeTest() {
     const patientAfterDoctorDelete = await request("/api/v1/patient/dashboard", "GET", undefined, patientCookie);
     assert.equal(patientAfterDoctorDelete.response.status, 200, "deleting one doctor should keep other patients");
 
-    console.log("Workflow smoke checks passed: role login, admin patient/doctor provisioning, assignment changes, assigned-patient boundaries, consultation, prescription, referral, safe deletes, and patient timeline.");
+    const adminAccounts = await request("/api/v1/admin/accounts?search=" + encodeURIComponent(emails.patient), "GET", undefined, adminCookie);
+    assert.equal(adminAccounts.response.status, 200);
+    assert.equal(adminAccounts.body.accounts.some((account) => account.email === emails.patient && account.role === "PATIENT"), true);
+    assert.equal(JSON.stringify(adminAccounts.body).includes("password_hash"), false, "account lookup must never return password hashes");
+    assert.equal(JSON.stringify(adminAccounts.body).includes("temporaryPassword"), false, "account lookup must never return temporary passwords");
+
+    const patientCannotSearchAccounts = await request("/api/v1/admin/accounts", "GET", undefined, patientCookie);
+    assert.equal(patientCannotSearchAccounts.response.status, 403, "patients cannot use administrator account management");
+    const doctorCannotSearchAccounts = await request("/api/v1/admin/accounts", "GET", undefined, doctorOneCookie);
+    assert.equal(doctorCannotSearchAccounts.response.status, 403, "doctors cannot use administrator account management");
+    const doctorCannotReset = await request("/api/v1/admin/accounts/1/reset-password", "POST", {}, doctorOneCookie);
+    assert.equal(doctorCannotReset.response.status, 403, "doctors cannot reset passwords");
+    const patientCannotReset = await request("/api/v1/admin/accounts/1/reset-password", "POST", {}, patientCookie);
+    assert.equal(patientCannotReset.response.status, 403, "patients cannot reset passwords");
+
+    const reset = await request("/api/v1/admin/accounts/" + patientRegistration.body.user.id + "/reset-password", "POST", {}, adminCookie);
+    assert.equal(reset.response.status, 200, "admin can issue a temporary password for a patient account");
+    assert.equal(typeof reset.body.temporaryPassword, "string");
+    assert.ok(reset.body.temporaryPassword.length >= 20);
+    const temporaryPassword = reset.body.temporaryPassword;
+    const [resetAccountRows] = await pool.execute(
+      "SELECT password_hash, must_change_password, session_version FROM users WHERE id = ?",
+      [patientRegistration.body.user.id]
+    );
+    assert.notEqual(resetAccountRows[0].password_hash, temporaryPassword, "temporary password must not be stored in plain text");
+    assert.equal(await bcrypt.compare(temporaryPassword, resetAccountRows[0].password_hash), true, "temporary password must be stored as a bcrypt hash");
+    assert.equal(Boolean(resetAccountRows[0].must_change_password), true);
+
+    const temporaryLogin = await request("/api/v1/auth/login", "POST", {
+      email: emails.patient,
+      password: temporaryPassword,
+      role: "PATIENT",
+    });
+    assert.equal(temporaryLogin.response.status, 200);
+    assert.equal(temporaryLogin.body.user.mustChangePassword, true);
+    const temporaryCookie = sessionCookie(temporaryLogin);
+    const forcedDashboard = await request("/api/v1/patient/dashboard", "GET", undefined, temporaryCookie);
+    assert.equal(forcedDashboard.response.status, 403, "temporary-password accounts must change the password before dashboard use");
+    const currentTemporaryUser = await request("/api/v1/auth/me", "GET", undefined, temporaryCookie);
+    assert.equal(currentTemporaryUser.response.status, 200, "the forced-password screen can restore the session");
+    const samePassword = await request("/api/v1/auth/change-password", "POST", {
+      password: temporaryPassword,
+      confirmPassword: temporaryPassword,
+    }, temporaryCookie);
+    assert.equal(samePassword.response.status, 400, "a temporary password cannot be reused as the new password");
+
+    const nextPassword = randomBytes(18).toString("base64url") + "B2!";
+    const changedPassword = await request("/api/v1/auth/change-password", "POST", {
+      password: nextPassword,
+      confirmPassword: nextPassword,
+    }, temporaryCookie);
+    assert.equal(changedPassword.response.status, 200);
+    assert.equal(changedPassword.body.user.fullName, "Synthetic Workflow Patient");
+    assert.equal(changedPassword.body.user.mustChangePassword, false);
+    const changedCookie = sessionCookie(changedPassword);
+    const dashboardAfterChange = await request("/api/v1/patient/dashboard", "GET", undefined, changedCookie);
+    assert.equal(dashboardAfterChange.response.status, 200, "the user can use the patient dashboard after changing the temporary password");
+    const oldPasswordLogin = await request("/api/v1/auth/login", "POST", {
+      email: emails.patient,
+      password: temporaryPassword,
+      role: "PATIENT",
+    });
+    assert.equal(oldPasswordLogin.response.status, 401, "the temporary password is invalidated after password change");
+    const changedPasswordLogin = await request("/api/v1/auth/login", "POST", {
+      email: emails.patient,
+      password: nextPassword,
+      role: "PATIENT",
+    });
+    assert.equal(changedPasswordLogin.response.status, 200);
+
+    const [resetAuditRows] = await pool.execute(
+      "SELECT action, details FROM audit_logs WHERE user_id = ? AND action = 'ACCOUNT_TEMP_PASSWORD_ISSUED' ORDER BY id DESC LIMIT 1",
+      [adminLogin.body.user.id]
+    );
+    assert.equal(resetAuditRows.length, 1, "administrator password resets must be audited");
+    assert.equal(JSON.stringify(resetAuditRows[0].details).includes(temporaryPassword), false, "audit logs must never contain a temporary password");
+
+    console.log("Workflow smoke checks passed: role login, protected account recovery, forced password change, admin patient/doctor provisioning, assignments, consultation, prescription, referral, safe deletes, and patient timeline.");
   } finally {
     const placeholders = emails.patient ? Object.values(emails).map(() => "?").join(",") : "?";
     const [users] = await pool.execute(
       "SELECT id, email, role FROM users WHERE email IN (" + placeholders + ")",
       Object.values(emails)
     );
-    const patientUsers = users.filter((user) => user.email === emails.patient).map((user) => user.id);
+    const patientEmails = new Set([emails.patient, emails.adminCreatedPatient]);
+    const patientUsers = users
+      .filter((user) => patientEmails.has(user.email) && user.role === "PATIENT")
+      .map((user) => user.id);
     const doctorUsers = users.filter((user) => user.email === emails.doctorOne || user.email === emails.doctorTwo).map((user) => user.id);
     const allUserIds = users.map((user) => user.id);
     const patientMarks = patientUsers.map(() => "?").join(",");
