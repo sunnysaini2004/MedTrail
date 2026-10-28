@@ -7,6 +7,7 @@ async function createPatientAccount(connection, {
   email,
   password,
   phone,
+  bloodGroup = null,
   actorUserId,
   auditAction = "PATIENT_REGISTERED",
 }) {
@@ -17,8 +18,8 @@ async function createPatientAccount(connection, {
   );
   const patientCode = "MT-" + randomBytes(12).toString("hex").toUpperCase();
   const [patientResult] = await connection.execute(
-    "INSERT INTO patients (user_id, patient_code, phone) VALUES (?, ?, ?)",
-    [userResult.insertId, patientCode, phone || null]
+    "INSERT INTO patients (user_id, patient_code, phone, blood_group) VALUES (?, ?, ?, ?)",
+    [userResult.insertId, patientCode, phone || null, bloodGroup || null]
   );
 
   await writeAudit(connection, {
@@ -35,6 +36,7 @@ async function createPatientAccount(connection, {
     email,
     role: "PATIENT",
     patientCode,
+    bloodGroup: bloodGroup || null,
   };
 }
 

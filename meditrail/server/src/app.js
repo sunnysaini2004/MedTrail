@@ -7,6 +7,7 @@ const authRoutes = require("./modules/auth/auth.routes");
 const patientRoutes = require("./modules/patients/patient.routes");
 const adminRoutes = require("./modules/admin/admin.routes");
 const doctorRoutes = require("./modules/doctors/doctor.routes");
+const publicSettingsRoutes = require("./modules/settings/public-settings.routes");
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/patient", patientRoutes);
 app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/doctor", doctorRoutes);
+app.use("/api/v1/public", publicSettingsRoutes);
 
 app.use((req, res) => {
   res.status(404).json({

@@ -14,10 +14,13 @@ const {
   grantPatientAccess,
   revokePatientAccess,
 } = require("./admin.controller");
+const { getAdminHospitalSettings, updateAdminHospitalSettings } = require("../settings/hospital-settings.controller");
 
 const router = express.Router();
 
 router.use(requireAuth, requireRole("ADMIN"));
+router.get("/hospital-settings", getAdminHospitalSettings);
+router.put("/hospital-settings", updateAdminHospitalSettings);
 router.get("/doctors", getDoctors);
 router.get("/patients", getPatients);
 router.get("/patient-access", getPatientAccess);

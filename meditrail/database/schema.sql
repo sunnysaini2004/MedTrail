@@ -24,10 +24,25 @@ CREATE TABLE
         user_id BIGINT UNSIGNED NOT NULL UNIQUE,
         patient_code VARCHAR(30) NOT NULL UNIQUE,
         date_of_birth DATE NULL,
-        blood_group VARCHAR(5) NULL,
+        blood_group VARCHAR(20) NULL,
         phone VARCHAR(20) NULL,
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         CONSTRAINT fk_patients_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE RESTRICT
+    );
+
+-- Public hospital contact information managed by an administrator.
+-- The CHECK constraint keeps this table to one singleton row (id = 1).
+CREATE TABLE
+    IF NOT EXISTS hospital_settings (
+        id TINYINT UNSIGNED PRIMARY KEY,
+        hospital_name VARCHAR(160) NULL,
+        official_email VARCHAR(254) NULL,
+        contact_phone VARCHAR(30) NULL,
+        address VARCHAR(500) NULL,
+        working_hours VARCHAR(250) NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        CONSTRAINT chk_hospital_settings_singleton CHECK (id = 1)
     );
 
 -- Doctor profile linked to a login account

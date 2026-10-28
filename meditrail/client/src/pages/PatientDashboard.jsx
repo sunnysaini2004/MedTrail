@@ -4,6 +4,7 @@ import Navbar from "../components/Navbar.jsx";
 import Footer from "../components/Footer.jsx";
 import { apiRequest } from "../lib/api.js";
 import { useAuth } from "../context/AuthContext.jsx";
+import { formatBloodGroup } from "../lib/bloodGroup.js";
 
 function formatActivityDate(value) {
   return new Date(value).toLocaleDateString(undefined, {
@@ -64,7 +65,7 @@ function PatientDashboard() {
           <div className="dashboard-patient-id">
             Patient ID: <strong>{dashboard?.patient.patientCode || user?.patientCode || "Loading..."}</strong>
             <span className="ml-3 text-sm text-slate-600">
-              Blood group: {dashboard?.patient.bloodGroup || "Not recorded"}
+              Blood group: {formatBloodGroup(dashboard?.patient.bloodGroup)}
             </span>
           </div>
           <p className="mt-3 text-sm text-slate-600">

@@ -92,12 +92,13 @@ when the frontend also hides or redirects a page.
 | Method and path | Access | Input and result |
 | --- | --- | --- |
 | `GET /api/health` | Public | No input; returns API health. No database query. |
-| `POST /api/v1/auth/register` | Public | `fullName`, Gmail `email`, `phone`, `password`, `confirmPassword`; creates a PATIENT user/profile and returns public user fields plus session cookie. |
+| `POST /api/v1/auth/register` | Public | `fullName`, Gmail `email`, `phone`, `password`, `confirmPassword`, optional `bloodGroup` (`A+`, `A-`, `B+`, `B-`, `AB+`, `AB-`, `O+`, `O-`, or `UNKNOWN`); creates a PATIENT user/profile and returns public user fields plus session cookie. |
 | `POST /api/v1/auth/login` | Public | `email`, `password`, selected `role`; role is checked against MySQL and a successful response sets the session cookie. |
 | `POST /api/v1/auth/logout` | Public | No body; expires the session cookie. |
 | `GET /api/v1/auth/me` | Any valid session | Returns the active account's public fields; never returns a password hash. |
 | `POST /api/v1/auth/change-password` | Valid session with a temporary-password change pending | `password`, `confirmPassword`; updates the bcrypt hash and session version. |
 | `GET /api/v1/patient/dashboard` | PATIENT | No caller-supplied patient ID; returns only the signed-in patient's summary, assigned doctor, and activity. |
+| `GET /api/v1/public/hospital-settings` | Public | Returns the configured public contact details, or `settings: null` before an admin configures them. |
 
 ### Admin
 
@@ -106,6 +107,8 @@ Every route in this section requires an authenticated ADMIN session.
 | Method and path | Input and result |
 | --- | --- |
 | `GET /api/v1/admin/doctors` | Returns doctor profiles, account status, and active assigned-patient counts. |
+| `GET /api/v1/admin/hospital-settings` | Returns the editable hospital contact fields, with blanks where no values are configured. |
+| `PUT /api/v1/admin/hospital-settings` | `hospitalName`, `officialEmail`, `contactPhone`, `address`, `workingHours`; validates and saves public settings, and writes an audit event. |
 | `GET /api/v1/admin/patients` | Returns patient profiles and current assigned-doctor fields. |
 | `GET /api/v1/admin/patient-access` | Returns active and revoked doctor-patient grant history. |
 | `GET /api/v1/admin/accounts?search=...` | Searches patient/doctor name, email, or account ID; returns identifying fields only. |

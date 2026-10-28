@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Navbar from "../components/Navbar.jsx";
 import Footer from "../components/Footer.jsx";
 import { apiRequest } from "../lib/api.js";
+import { formatBloodGroup } from "../lib/bloodGroup.js";
 
 function DoctorDashboard() {
   const [doctor, setDoctor] = useState(null);
@@ -143,7 +144,7 @@ function DoctorDashboard() {
             {patients.length === 0 ? <p className="text-slate-600">No patients are assigned to your account.</p> : (
               <label className="block text-sm font-medium">Choose patient<select className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" value={patientCode} onChange={(event) => setPatientCode(event.target.value)}><option value="">Select a patient</option>{patients.map((patient) => <option key={patient.patientCode} value={patient.patientCode}>{patient.fullName} · {patient.patientCode}</option>)}</select></label>
             )}
-            {patientCode && <div className="rounded-lg bg-slate-50 p-3 text-sm"><span className="font-semibold">Blood group:</span> {patients.find((patient) => patient.patientCode === patientCode)?.bloodGroup || "Not recorded"}</div>}
+            {patientCode && <div className="rounded-lg bg-slate-50 p-3 text-sm"><span className="font-semibold">Blood group:</span> {formatBloodGroup(patients.find((patient) => patient.patientCode === patientCode)?.bloodGroup)}</div>}
           </div>
 
           <form className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm" onSubmit={(event) => submitForm(event, "/doctor/consultations", (values) => ({ ...values, patientCode }), "Consultation saved.")}>

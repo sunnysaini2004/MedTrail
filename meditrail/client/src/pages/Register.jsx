@@ -89,6 +89,19 @@ function Register() {
             </div>
 
             <div>
+              <label htmlFor="bloodGroup">Blood Group (optional)</label>
+              <select id="bloodGroup" name="bloodGroup" defaultValue="" className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900">
+                <option value="">Prefer not to say</option>
+                <option value="A+">A+</option><option value="A-">A-</option>
+                <option value="B+">B+</option><option value="B-">B-</option>
+                <option value="AB+">AB+</option><option value="AB-">AB-</option>
+                <option value="O+">O+</option><option value="O-">O-</option>
+                <option value="UNKNOWN">Unknown / Not sure</option>
+              </select>
+              <p className="mt-1 text-sm text-slate-600">You can leave this blank or choose “Unknown / Not sure”.</p>
+            </div>
+
+            <div>
               <label htmlFor="password">Password</label>
               <PasswordInput
                 id="password"

@@ -8,6 +8,7 @@ const { createPatientAccount } = require("../patients/patient.service");
 const COOKIE_NAME = "meditrail_token";
 const TOKEN_TTL_SECONDS = 15 * 60;
 const LOGIN_ROLES = new Set(["PATIENT", "DOCTOR", "ADMIN"]);
+const BLOOD_GROUPS = new Set(["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "UNKNOWN"]);
 
 function setAuthCookie(res, token) {
   res.cookie(COOKIE_NAME, token, {
@@ -81,6 +82,10 @@ function validateRegistration(body) {
     return "Passwords do not match.";
   }
 
+  if (body.bloodGroup != null && body.bloodGroup !== "" && (typeof body.bloodGroup !== "string" || !BLOOD_GROUPS.has(body.bloodGroup))) {
+    return "Choose a valid blood group or leave the field blank.";
+  }
+
   return null;
 }
 
@@ -124,6 +129,7 @@ async function register(req, res) {
       email,
       password: req.body.password,
       phone,
+      bloodGroup: req.body.bloodGroup || null,
     });
     await connection.commit();
     setAuthCookie(res, createToken(user.id, secret, user.sessionVersion));

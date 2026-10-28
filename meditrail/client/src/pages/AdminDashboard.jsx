@@ -4,6 +4,7 @@ import Footer from "../components/Footer.jsx";
 import Modal from "../components/Modal.jsx";
 import PasswordInput from "../components/PasswordInput.jsx";
 import { apiRequest } from "../lib/api.js";
+import { formatBloodGroup } from "../lib/bloodGroup.js";
 
 const inputClass = "mt-1 min-h-11 w-full min-w-0 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100";
 const labelClass = "block min-w-0 text-sm font-medium text-slate-700";
@@ -17,6 +18,7 @@ const sectionLabels = {
   accessGrants: "Doctor access history",
   accounts: "Account management",
 };
+const emptyHospitalSettings = { hospitalName: "", officialEmail: "", contactPhone: "", address: "", workingHours: "" };
 
 function formatDate(value) {
   if (!value) return "Not recorded";
@@ -48,6 +50,11 @@ function AdminDashboard() {
   const [details, setDetails] = useState(null);
   const [resetResult, setResetResult] = useState(null);
   const [copyMessage, setCopyMessage] = useState("");
+  const [hospitalSettings, setHospitalSettings] = useState(emptyHospitalSettings);
+  const [hospitalSettingsLoading, setHospitalSettingsLoading] = useState(true);
+  const [hospitalSettingsSaving, setHospitalSettingsSaving] = useState(false);
+  const [hospitalSettingsError, setHospitalSettingsError] = useState("");
+  const [hospitalSettingsMessage, setHospitalSettingsMessage] = useState("");
   const loadRequestId = useRef(0);
 
   const loadData = useCallback(async () => {
@@ -88,6 +95,35 @@ function AdminDashboard() {
     loadData();
     return () => { loadRequestId.current += 1; };
   }, [loadData]);
+
+  useEffect(() => {
+    let active = true;
+    apiRequest("/admin/hospital-settings")
+      .then((result) => { if (active) setHospitalSettings({ ...emptyHospitalSettings, ...result.settings }); })
+      .catch((requestError) => { if (active) setHospitalSettingsError(requestError.message); })
+      .finally(() => { if (active) setHospitalSettingsLoading(false); });
+    return () => { active = false; };
+  }, []);
+
+  async function saveHospitalSettings(event) {
+    event.preventDefault();
+    setHospitalSettingsSaving(true);
+    setHospitalSettingsError("");
+    setHospitalSettingsMessage("");
+    try {
+      const values = Object.fromEntries(new FormData(event.currentTarget));
+      const result = await apiRequest("/admin/hospital-settings", {
+        method: "PUT",
+        body: JSON.stringify(values),
+      });
+      setHospitalSettings({ ...emptyHospitalSettings, ...result.settings });
+      setHospitalSettingsMessage("Hospital contact details saved.");
+    } catch (requestError) {
+      setHospitalSettingsError(requestError.message);
+    } finally {
+      setHospitalSettingsSaving(false);
+    }
+  }
 
   const filteredPatients = useMemo(() => {
     const term = patientSearch.trim().toLowerCase();
@@ -173,6 +209,22 @@ function AdminDashboard() {
           <h1 className="mt-2 break-words text-2xl font-bold sm:text-3xl">MediTrail admin workspace</h1>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600 sm:text-base">Manage synthetic accounts, assignments, and access. These actions are protected for administrators.</p>
         </header>
+
+        <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6" aria-labelledby="hospital-settings-heading">
+          <div className="mb-4"><h2 id="hospital-settings-heading" className="text-xl font-bold">Hospital contact settings</h2><p className="mt-1 text-sm text-slate-600">These details appear on the public home page. Leave a field blank to hide it.</p></div>
+          {hospitalSettingsError && <p className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800" role="alert">{hospitalSettingsError}</p>}
+          {hospitalSettingsMessage && <p className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800" role="status">{hospitalSettingsMessage}</p>}
+          {hospitalSettingsLoading ? <p aria-live="polite" className="text-sm text-slate-600">Loading hospital settings...</p> : (
+            <form className="grid min-w-0 gap-4 sm:grid-cols-2" onSubmit={saveHospitalSettings}>
+              <label className={labelClass}>Hospital name<input className={inputClass} name="hospitalName" value={hospitalSettings.hospitalName} onChange={(event) => setHospitalSettings((current) => ({ ...current, hospitalName: event.target.value }))} maxLength={160} /></label>
+              <label className={labelClass}>Official email<input className={inputClass} name="officialEmail" type="email" value={hospitalSettings.officialEmail} onChange={(event) => setHospitalSettings((current) => ({ ...current, officialEmail: event.target.value }))} maxLength={254} /></label>
+              <label className={labelClass}>Contact phone<input className={inputClass} name="contactPhone" type="tel" value={hospitalSettings.contactPhone} onChange={(event) => setHospitalSettings((current) => ({ ...current, contactPhone: event.target.value }))} maxLength={30} /></label>
+              <label className={labelClass}>Working hours<textarea className={inputClass} name="workingHours" rows={2} value={hospitalSettings.workingHours} onChange={(event) => setHospitalSettings((current) => ({ ...current, workingHours: event.target.value }))} maxLength={250} /></label>
+              <label className={labelClass + " sm:col-span-2"}>Address<textarea className={inputClass} name="address" rows={3} value={hospitalSettings.address} onChange={(event) => setHospitalSettings((current) => ({ ...current, address: event.target.value }))} maxLength={500} /></label>
+              <div className="sm:col-span-2"><button className={tealButton} type="submit" disabled={hospitalSettingsSaving}>{hospitalSettingsSaving ? "Saving..." : "Save hospital settings"}</button></div>
+            </form>
+          )}
+        </section>
 
         {error && <p className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800" role="alert">{error}</p>}
         {Object.keys(loadFailures).length > 0 && <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900" role="alert">
@@ -320,7 +372,7 @@ function AdminDashboard() {
           {details.type === "patient" ? <>
             <Detail label="Full name" value={details.record.fullName} /><Detail label="Patient ID" value={details.record.patientCode} />
             <Detail label="Email address" value={details.record.email} /><Detail label="Mobile number" value={details.record.phone} />
-            <Detail label="Date of birth" value={formatDate(details.record.dateOfBirth)} /><Detail label="Blood group" value={details.record.bloodGroup} />
+            <Detail label="Date of birth" value={formatDate(details.record.dateOfBirth)} /><Detail label="Blood group" value={formatBloodGroup(details.record.bloodGroup)} />
             <Detail label="Assigned doctor" value={details.record.assignedDoctorName} /><Detail label="Doctor specialty" value={details.record.assignedDoctorSpecialty} />
             <Detail label="Account status" value={details.record.isActive ? "Active" : "Inactive"} /><Detail label="Account created" value={formatDate(details.record.createdAt)} />
             <p className="text-sm text-slate-600 sm:col-span-2">Gender, address, and emergency contact details are not stored in the current patient profile schema.</p>

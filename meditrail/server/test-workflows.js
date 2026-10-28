@@ -24,6 +24,8 @@ async function runWorkflowSmokeTest() {
     doctorOne: randomBytes(18).toString("base64url") + "Aa1!",
     doctorTwo: randomBytes(18).toString("base64url") + "Aa1!",
   };
+  let originalHospitalSettings = null;
+  let hospitalSettingsTestTouched = false;
 
   const server = app.listen(0);
   await new Promise((resolve, reject) => {
@@ -57,6 +59,11 @@ async function runWorkflowSmokeTest() {
   }
 
   try {
+    const [savedSettings] = await pool.execute(
+      "SELECT hospital_name, official_email, contact_phone, address, working_hours FROM hospital_settings WHERE id = 1 LIMIT 1"
+    );
+    originalHospitalSettings = savedSettings[0] || null;
+
     const adminHash = await bcrypt.hash(passwords.admin, 12);
     await pool.execute(
       "INSERT INTO users (full_name, email, password_hash, role) VALUES (?, ?, ?, 'ADMIN')",
@@ -75,6 +82,10 @@ async function runWorkflowSmokeTest() {
     const patientCode = patientRegistration.body.user.patientCode;
     const patientCookie = sessionCookie(patientRegistration);
 
+    const publicSettingsBefore = await request("/api/v1/public/hospital-settings");
+    assert.equal(publicSettingsBefore.response.status, 200, "public contact settings should be readable without a session");
+    assert.equal(publicSettingsBefore.body.settings === null, originalHospitalSettings === null, "public route should return null only when no settings row exists");
+
     const patientCannotAdmin = await request("/api/v1/admin/doctors", "GET", undefined, patientCookie);
     assert.equal(patientCannotAdmin.response.status, 403, "patient role should not access admin resources");
     const patientCannotDoctor = await request("/api/v1/doctor/me", "GET", undefined, patientCookie);
@@ -90,6 +101,33 @@ async function runWorkflowSmokeTest() {
     assert.equal(adminLogin.body.user.role, "ADMIN", "admin login should return the database role");
     const adminCannotDoctor = await request("/api/v1/doctor/me", "GET", undefined, adminCookie);
     assert.equal(adminCannotDoctor.response.status, 403, "admin role should not access doctor resources");
+
+    const anonymousSettings = await request("/api/v1/admin/hospital-settings");
+    assert.equal(anonymousSettings.response.status, 401, "admin hospital settings should reject anonymous access");
+    const patientSettings = await request("/api/v1/admin/hospital-settings", "GET", undefined, patientCookie);
+    assert.equal(patientSettings.response.status, 403, "patients must not read the admin settings form");
+    const adminSettings = await request("/api/v1/admin/hospital-settings", "GET", undefined, adminCookie);
+    assert.equal(adminSettings.response.status, 200, "admin should read the settings form");
+    const invalidSettings = await request("/api/v1/admin/hospital-settings", "PUT", {
+      hospitalName: "Synthetic Clinic",
+      officialEmail: "invalid-email",
+      contactPhone: "",
+      address: "",
+      workingHours: "",
+    }, adminCookie);
+    assert.equal(invalidSettings.response.status, 400, "invalid public email addresses should be rejected");
+    const updatedSettings = await request("/api/v1/admin/hospital-settings", "PUT", {
+      hospitalName: "MediTrail Synthetic Demo Clinic",
+      officialEmail: "contact@example.test",
+      contactPhone: "+91 90000 00000",
+      address: "Synthetic address for automated test only",
+      workingHours: "Monday-Friday, 9:00-17:00",
+    }, adminCookie);
+    assert.equal(updatedSettings.response.status, 200, "admin should save contact settings");
+    hospitalSettingsTestTouched = true;
+    const publicSettingsAfter = await request("/api/v1/public/hospital-settings");
+    assert.equal(publicSettingsAfter.response.status, 200);
+    assert.equal(publicSettingsAfter.body.settings.hospitalName, "MediTrail Synthetic Demo Clinic", "public page should receive saved hospital details");
 
     const firstDoctor = await request("/api/v1/admin/doctors", "POST", {
       fullName: "Synthetic Workflow Doctor One",
@@ -120,6 +158,14 @@ async function runWorkflowSmokeTest() {
     assert.equal(doctorOneLogin.body.user.role, "DOCTOR", "doctor login should return the database role");
     const doctorCannotAdmin = await request("/api/v1/admin/doctors", "GET", undefined, doctorOneCookie);
     assert.equal(doctorCannotAdmin.response.status, 403, "doctor role should not access admin resources");
+    const doctorCannotUpdateSettings = await request("/api/v1/admin/hospital-settings", "PUT", {
+      hospitalName: "Unauthorized change",
+      officialEmail: "",
+      contactPhone: "",
+      address: "",
+      workingHours: "",
+    }, doctorOneCookie);
+    assert.equal(doctorCannotUpdateSettings.response.status, 403, "doctors must not change public hospital settings");
     const doctorProfile = await request("/api/v1/doctor/me", "GET", undefined, doctorOneCookie);
     assert.equal(doctorProfile.response.status, 200);
     const referralOptions = await request("/api/v1/doctor/referrals/doctors", "GET", undefined, doctorOneCookie);
@@ -220,6 +266,7 @@ async function runWorkflowSmokeTest() {
 
     const dashboard = await request("/api/v1/patient/dashboard", "GET", undefined, patientCookie);
     assert.equal(dashboard.response.status, 200);
+    assert.equal(dashboard.body.patient.bloodGroup, null, "blood group should remain optional for older or blank registrations");
     assert.deepEqual(dashboard.body.summary, {
       consultationCount: 1,
       prescriptionCount: 1,
@@ -327,6 +374,20 @@ async function runWorkflowSmokeTest() {
 
     console.log("Workflow smoke checks passed: role login, protected account recovery, forced password change, admin patient/doctor provisioning, assignments, consultation, prescription, referral, safe deletes, and patient timeline.");
   } finally {
+    if (hospitalSettingsTestTouched) {
+      try {
+        if (originalHospitalSettings) {
+          await pool.execute(
+            "INSERT INTO hospital_settings (id, hospital_name, official_email, contact_phone, address, working_hours) VALUES (1, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE hospital_name = VALUES(hospital_name), official_email = VALUES(official_email), contact_phone = VALUES(contact_phone), address = VALUES(address), working_hours = VALUES(working_hours)",
+            [originalHospitalSettings.hospital_name, originalHospitalSettings.official_email, originalHospitalSettings.contact_phone, originalHospitalSettings.address, originalHospitalSettings.working_hours]
+          );
+        } else {
+          await pool.execute("DELETE FROM hospital_settings WHERE id = 1");
+        }
+      } catch (error) {
+        console.error("Could not restore the original synthetic-test hospital settings:", error.message);
+      }
+    }
     const placeholders = emails.patient ? Object.values(emails).map(() => "?").join(",") : "?";
     const [users] = await pool.execute(
       "SELECT id, email, role FROM users WHERE email IN (" + placeholders + ")",

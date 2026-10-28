@@ -1,7 +1,9 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar.jsx";
 import Footer from "../components/Footer.jsx";
 import { getRoleLoginPath } from "../lib/roleRoutes.js";
+import { apiRequest } from "../lib/api.js";
 
 const loginOptions = [
   { role: "ADMIN", name: "Admin", description: "Manage patient and doctor accounts.", color: "border-teal-200 bg-teal-50 text-teal-900" },
@@ -11,6 +13,21 @@ const loginOptions = [
 
 
 function Home() {
+  const [hospitalSettings, setHospitalSettings] = useState(null);
+  const [contactLoading, setContactLoading] = useState(true);
+  const [contactError, setContactError] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    apiRequest("/public/hospital-settings")
+      .then((result) => { if (active) setHospitalSettings(result.settings || null); })
+      .catch(() => { if (active) setContactError(true); })
+      .finally(() => { if (active) setContactLoading(false); });
+    return () => { active = false; };
+  }, []);
+
+  const phoneLink = hospitalSettings?.contactPhone?.replace(/[^+\d]/g, "");
+
   return (
     <div className="app">
       
@@ -114,12 +131,21 @@ function Home() {
         </section>
 
         <section className="contact" id="contact">
-          <h2>Building a connected care experience.</h2>
-          <p>
-            Patient registration, role-based access, consultation records,
-            prescriptions, and referrals are available in this academic demo.
-            Document storage is future work.
-          </p>
+          <p className="eyebrow">HOSPITAL INFORMATION</p>
+          <h2>{hospitalSettings?.hospitalName || "Contact and visit us"}</h2>
+          {contactLoading ? <p aria-live="polite">Loading hospital contact details...</p> : contactError ? (
+            <p role="status">Hospital contact details are temporarily unavailable.</p>
+          ) : hospitalSettings ? (
+            <div className="mt-5 grid max-w-3xl gap-3 text-left sm:grid-cols-2">
+              {hospitalSettings.officialEmail && <p className="break-words"><strong>Email:</strong> <a className="text-teal-700 underline" href={`mailto:${hospitalSettings.officialEmail}`}>{hospitalSettings.officialEmail}</a></p>}
+              {hospitalSettings.contactPhone && <p><strong>Phone:</strong> <a className="text-teal-700 underline" href={`tel:${phoneLink}`}>{hospitalSettings.contactPhone}</a></p>}
+              {hospitalSettings.address && <p className="whitespace-pre-line sm:col-span-2"><strong>Address:</strong> {hospitalSettings.address}</p>}
+              {hospitalSettings.workingHours && <p className="whitespace-pre-line sm:col-span-2"><strong>Working hours:</strong> {hospitalSettings.workingHours}</p>}
+            </div>
+          ) : (
+            <p>Hospital contact details have not been configured yet.</p>
+          )}
+          <p className="mt-5 text-sm">MediTrail is an academic prototype. Use synthetic data only.</p>
         </section>
       </main>
 

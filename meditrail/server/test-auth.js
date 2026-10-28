@@ -17,6 +17,7 @@ async function runAuthSmokeTest() {
     fullName: "Synthetic MediTrail Test",
     email: testEmail,
     phone: "+91 90000 00000",
+    bloodGroup: "AB+",
     password: testPassword,
     confirmPassword: testPassword,
     role: "ADMIN",
@@ -44,6 +45,9 @@ async function runAuthSmokeTest() {
     const health = await request("/api/health");
     assert.equal(health.response.status, 200, "health endpoint should remain available");
 
+    const publicSettings = await request("/api/v1/public/hospital-settings");
+    assert.equal(publicSettings.response.status, 200, "public hospital settings route should be mounted");
+
     const preflight = await request("/api/v1/auth/register", {
       method: "OPTIONS",
       headers: {
@@ -69,6 +73,13 @@ async function runAuthSmokeTest() {
     });
     assert.equal(invalidDomain.response.status, 400, "registration should only accept Gmail addresses");
 
+    const invalidBloodGroup = await request("/api/v1/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...testAccount, bloodGroup: "NOT-A-BLOOD-GROUP" }),
+    });
+    assert.equal(invalidBloodGroup.response.status, 400, "registration should reject unsupported blood-group values");
+
     const registered = await request("/api/v1/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -81,12 +92,13 @@ async function runAuthSmokeTest() {
     const userId = registered.body.user.id;
 
     const [savedRows] = await pool.execute(
-      "SELECT u.password_hash, u.role, p.patient_code FROM users u JOIN patients p ON p.user_id = u.id WHERE u.id = ?",
+      "SELECT u.password_hash, u.role, p.patient_code, p.blood_group FROM users u JOIN patients p ON p.user_id = u.id WHERE u.id = ?",
       [userId]
     );
     assert.equal(savedRows.length, 1, "registration should create both account and patient profile");
     assert.notEqual(savedRows[0].password_hash, testPassword, "password must not be stored as plain text");
     assert.equal(savedRows[0].role, "PATIENT");
+    assert.equal(savedRows[0].blood_group, "AB+", "optional blood group should be stored on the patient profile");
 
     const duplicate = await request("/api/v1/auth/register", {
       method: "POST",
@@ -125,6 +137,7 @@ async function runAuthSmokeTest() {
     const dashboard = await request("/api/v1/patient/dashboard", { headers: { Cookie: cookie } });
     assert.equal(dashboard.response.status, 200, "a patient should load their own dashboard");
     assert.equal(dashboard.body.patient.patientCode, registered.body.user.patientCode);
+    assert.equal(dashboard.body.patient.bloodGroup, "AB+", "patient dashboard should return the saved blood group");
     assert.deepEqual(dashboard.body.summary, {
       consultationCount: 0,
       prescriptionCount: 0,
