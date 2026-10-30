@@ -12,6 +12,12 @@ const pool = require("./config/db");
 
 const app = express();
 
+// API responses can contain private account and medical-record data.
+app.use((req, res, next) => {
+  res.setHeader("Cache-Control", "no-store");
+  next();
+});
+
 app.use(
   cors({
     origin: process.env.CLIENT_ORIGIN || "http://localhost:5173",

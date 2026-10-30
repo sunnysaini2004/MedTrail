@@ -1,0 +1,9 @@
+.env
+.env.*
+certs/
+node_modules/
+coverage/
+src/server.js
+test-*.js
+scripts/
+*.log
