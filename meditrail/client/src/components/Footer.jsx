@@ -11,7 +11,7 @@ function Footer() {
 
       <p>One Patient. One Connected Treatment Journey.</p>
 
-      <p>Academic prototype · Synthetic demo data only</p>
+      
     </footer>
   );
 }

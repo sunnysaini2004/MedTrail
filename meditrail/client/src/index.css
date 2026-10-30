@@ -213,6 +213,27 @@ a {
   background: #f5faf9;
 }
 
+.about.home-about {
+  padding-block: clamp(56px, 7vw, 88px);
+}
+
+.about.home-about > .eyebrow {
+  margin-bottom: 14px;
+}
+
+.about.home-about h2 {
+  max-width: 24ch;
+  margin: 0;
+  line-height: 1.15;
+}
+
+.about.home-about > .home-about-description {
+  max-width: 68ch;
+  margin-top: 18px;
+  font-size: clamp(16px, 1.35vw, 18px);
+  line-height: 1.75;
+}
+
 .about > p:last-child,
 .contact > p {
   max-width: 680px;

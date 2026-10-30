@@ -121,12 +121,14 @@ function Home() {
           </div>
         </section>
 
-        <section className="about" id="about">
+        <section className="about home-about" id="about">
           <p className="eyebrow">ABOUT MEDTRAIL</p>
-          <h2>Less paperwork. A clearer treatment journey.</h2>
-          <p>
-            MediTrail is an academic project concept designed to connect
-            patient records and authorized healthcare workflows.
+          <h2>Healthcare Records. Connected Care.</h2>
+          <p className="home-about-description">
+            MediTrail brings patient records, consultations, prescriptions, and
+            medical referrals together in one organized digital platform —
+            helping patients and authorized doctors stay connected throughout
+            the treatment journey.
           </p>
         </section>
 
@@ -145,7 +147,6 @@ function Home() {
           ) : (
             <p>Hospital contact details have not been configured yet.</p>
           )}
-          <p className="mt-5 text-sm">MediTrail is an academic prototype. Use synthetic data only.</p>
         </section>
       </main>
 
