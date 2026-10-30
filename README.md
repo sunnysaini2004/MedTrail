@@ -1,206 +1,590 @@
-# MediTrail
+# MediTrail – Digital Patient Medical Record & Referral Management System
 
-MediTrail is an MCA academic prototype for patient accounts, doctor assignments, consultations, prescriptions, and referrals. It uses synthetic data only and is not for real clinical or hospital use.
+<p align="center">
+  <img src="https://img.shields.io/badge/Project-MediTrail-0D9488?style=for-the-badge" alt="MediTrail"/>
+  <img src="https://img.shields.io/badge/React-Vite-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React"/>
+  <img src="https://img.shields.io/badge/Node.js-Backend-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js"/>
+  <img src="https://img.shields.io/badge/MySQL-Database-4479A1?style=for-the-badge&logo=mysql&logoColor=white" alt="MySQL"/>
+</p>
 
-## Demo account defaults
+<p align="center">
+  A centralized digital healthcare platform designed to simplify patient medical records, doctor consultations, prescriptions, and medical referrals.
+</p>
 
-These credentials are created by the optional `demo:seed` command for a fresh demonstration database. A read-only check of this local database found the documented Admin credentials match an active Admin account, but no active accounts use the documented Doctor or Patient demo emails. To preserve existing accounts, skip `demo:seed`; the Admin can create a Doctor account, and Patients can self-register.
+<p align="center">
+  <a href="https://meditrail-frontend-rho.vercel.app">Live Application</a> •
+  <a href="https://med-trail.vercel.app/api/health">Backend API</a> •
+  <a href="https://github.com/sunnysaini2004/MedTrail">GitHub Repository</a>
+</p>
 
-| Role | Email | Password |
-| --- | --- | --- |
-| Admin | **sunnysaini@gmail.com** | **sunny123** |
-| Doctor | **doctor123@gmail.com** | **doctor123** |
-| Patient | **patient123@gmail.com** | **patient123** |
+---
 
-Passwords are stored as bcrypt hashes. Demo seed data is synthetic. Do not enter real patient or personal information.
+## 1. Introduction
 
-## Features
+**MediTrail** is a web-based Digital Patient Medical Record and Referral Management System designed to make healthcare information more accessible, organized, and manageable.
 
-- Three separate login choices for Admin, Doctor, and Patient.
-- Patient self-registration; registration always makes a PATIENT account.
-- Admin tools to create patients and doctors, assign or change a doctor, and delete accounts.
-- Doctors can see only patients with an active assignment or accepted referral.
-- Patient dashboard with assigned doctor and available consultation, prescription, and referral history.
-- Server-side authentication and role checks for protected API routes.
+It provides a centralized platform where patients' medical records, consultation history, prescriptions, and referrals can be maintained digitally.
 
-## Technology and folders
+Instead of depending entirely on physical medical files and paperwork, MediTrail helps authorized healthcare professionals access relevant patient information through a centralized system.
 
-- Frontend: React, Vite, Tailwind CSS, React Router (client/).
-- Backend: Node.js and Express (server/).
-- Database: MySQL schema and migrations (database/).
-- Project notes and demo flow (docs/).
+The platform provides three primary user roles:
 
-## Online demo deployment
+- **Admin:** Manages hospital operations, doctors, patients, and system settings.
+- **Doctor:** Manages assigned patients, consultations, prescriptions, and referrals.
+- **Patient:** Registers, accesses personal medical information, and follows their treatment journey.
 
-See [`meditrail/docs/deployment.md`](meditrail/docs/deployment.md) for the Vercel, Render, and Aiven setup. It uses a same-origin Vercel API proxy for cookie authentication and requires verified TLS for the production MySQL connection. The free hosting plans are for an academic synthetic-data demo, not dependable clinical production.
+## 2. Problem Statement
 
-## Requirements
+Traditional healthcare systems often depend on physical medical records, printed prescriptions, and manually maintained patient files.
 
-Install Node.js with npm and MySQL 8. Commands below use this project location: D:\College Project\meditrail. Change the path if your folder is elsewhere.
+This creates several challenges:
 
-## Windows PowerShell setup
+- **Lost or damaged medical records:** Patients may lose important medical documents and previous prescriptions.
+- **Fragmented medical history:** Medical information is distributed across different hospitals, clinics, and physical files.
+- **Difficult referrals:** Transferring patient information between doctors and specialists can involve unnecessary paperwork.
+- **Time-consuming processes:** Doctors may need additional time to review previous medical records.
+- **Limited accessibility:** Patients may need to carry physical documents whenever they visit another healthcare provider.
+- **Manual record management:** Maintaining and organizing large numbers of patient records can become difficult for hospital administrators.
 
-### 1. Start MySQL
+### Proposed Solution
 
-Start your local MySQL service from Windows Services or MySQL Workbench. To see its service name from PowerShell:
+MediTrail addresses these challenges by providing a centralized digital platform for managing patient medical information.
 
-~~~powershell
-Get-Service *MySQL*
-~~~
+It allows authorized users to maintain, organize, and access patient records, consultations, prescriptions, and referrals through a structured web application.
 
-If the service is called MySQL80, an elevated PowerShell window can start it with:
+The goal is to reduce paperwork, improve information accessibility, and make patient record management more efficient.
 
-~~~powershell
-Start-Service MySQL80
-~~~
+## 3. Project Objectives
 
-Use the service name shown on your computer.
+- Digitize patient medical records.
+- Provide a centralized patient information management system.
+- Simplify doctor-patient assignment and management.
+- Maintain consultation and prescription history.
+- Support digital medical referrals.
+- Provide role-based access for administrators, doctors, and patients.
+- Improve the organization and accessibility of healthcare information.
+- Reduce dependency on physical medical documents.
 
-### 2. Install backend dependencies and configure .env
+## 4. User Roles and Responsibilities
 
-Open **PowerShell Terminal 1**:
+### Admin Dashboard
 
-~~~powershell
-Set-Location "D:\College Project\meditrail\server"
+The administrator manages the hospital's overall platform operations.
+
+Responsibilities include:
+
+- Manage doctor accounts.
+- Register and manage patient accounts.
+- Assign patients to doctors.
+- View and manage doctor and patient records.
+- Manage hospital contact information and settings.
+- Monitor and manage administrative activities.
+- Manage user accounts and access.
+
+### Doctor Dashboard
+
+Doctors manage their assigned patients and treatment activities.
+
+Responsibilities include:
+
+- View assigned patients.
+- Access authorized patient medical information.
+- Record patient consultations.
+- Add prescriptions and prescribed medicines.
+- Create medical referrals.
+- Review patient treatment history.
+- Maintain consultation records.
+
+### Patient Dashboard
+
+Patients can access their personal healthcare information.
+
+Responsibilities include:
+
+- Register for an account.
+- Log in securely.
+- View personal profile information.
+- Access available medical records.
+- Review consultation history.
+- View prescriptions.
+- Track medical referrals and treatment activities.
+
+---
+
+## 5. How MediTrail Works – Complete Workflow
+
+The following workflow explains how the platform operates.
+
+### Step 1: Patient Registration
+
+A new patient visits the MediTrail website and registers by providing the required personal information.
+
+Registration includes:
+
+- Full name
+- Date of birth
+- Mobile number
+- Gender
+- Blood group (optional)
+- Email address
+- Address
+- City, state, and PIN code
+- Emergency contact information
+
+After successful registration, a patient account is created.
+
+### Step 2: Admin Management
+
+The administrator logs in through the Admin Login portal.
+
+The admin can:
+
+- Create doctor accounts.
+- Manage registered patients.
+- Assign patients to appropriate doctors.
+- Manage hospital information and contact settings.
+
+### Step 3: Doctor Login
+
+Doctors access their accounts using their assigned credentials.
+
+After authentication, doctors can view their assigned patients and access authorized medical information.
+
+### Step 4: Patient Consultation
+
+When a patient visits a doctor, the doctor can record consultation details in the system.
+
+Consultation information becomes part of the patient's digital treatment history.
+
+### Step 5: Prescription Management
+
+Doctors can create prescriptions and maintain prescribed medicine information.
+
+The prescription records help maintain continuity in the patient's treatment history.
+
+### Step 6: Medical Referral
+
+When a patient requires treatment from another specialist, the doctor can create a referral.
+
+This helps organize referral information and maintain a record of the patient's treatment journey.
+
+### Step 7: Digital Medical History
+
+The patient's available medical information, consultations, prescriptions, and referrals are organized in the system.
+
+Authorized users can access relevant information according to their assigned roles and permissions.
+
+---
+
+## 6. Key Features
+
+| Feature | Description |
+|---|---|
+| Patient Registration | Digital patient account creation |
+| Role-Based Authentication | Separate access for Admin, Doctor, and Patient |
+| Admin Dashboard | Hospital and user management |
+| Doctor Management | Create and manage doctor accounts |
+| Patient Management | Register and manage patient information |
+| Doctor-Patient Assignment | Assign patients to doctors |
+| Consultation Management | Maintain patient consultation history |
+| Prescription Management | Record prescribed medicines |
+| Referral Management | Maintain medical referral information |
+| Treatment History | Organize patient treatment activities |
+| Hospital Settings | Manage hospital contact information |
+| Secure Authentication | JWT-based authentication and password hashing |
+| Protected Routes | Backend role-based authorization |
+| Responsive Interface | Mobile-friendly web interface |
+
+---
+
+## 7. Technology Stack
+
+### Frontend
+
+- React.js
+- Vite
+- JavaScript
+- Tailwind CSS / CSS
+- React Router
+
+### Backend
+
+- Node.js
+- Express.js
+- REST API
+- JWT Authentication
+- bcryptjs
+- HttpOnly Cookies
+
+### Database
+
+- MySQL 8
+- Aiven Cloud MySQL
+
+### Deployment and Hosting
+
+- Vercel – Frontend Hosting
+- Vercel – Backend Hosting
+- Aiven – Cloud Database
+- GitHub – Version Control and Source Code Management
+
+---
+
+## 8. System Architecture
+
+MediTrail follows a client-server architecture.
+
+```mermaid
+flowchart TD
+    A[User / Browser] --> B[React Frontend]
+    B --> C[Vercel Frontend Hosting]
+    C --> D[API Rewrite]
+    D --> E[Node.js + Express Backend]
+    E --> F[Authentication and Authorization]
+    F --> G[Aiven MySQL Database]
+
+    G --> H[Patient Records]
+    G --> I[Doctor Records]
+    G --> J[Consultations]
+    G --> K[Prescriptions]
+    G --> L[Referrals]
+```
+
+### Architecture Explanation
+
+1. Users interact with the React frontend.
+2. The frontend sends API requests through the Vercel API rewrite.
+3. The Express backend receives and processes the requests.
+4. Authentication and authorization middleware validate access.
+5. The backend communicates with the Aiven MySQL database.
+6. The requested information is returned to the frontend.
+
+---
+
+## 9. Database Design
+
+MediTrail uses MySQL as its relational database.
+
+The database contains the following main tables:
+
+| Table | Purpose |
+|---|---|
+| `users` | Authentication and user account information |
+| `patients` | Patient profile information |
+| `doctors` | Doctor profile information |
+| `hospital_settings` | Hospital contact and configuration details |
+| `consultations` | Patient consultation records |
+| `prescriptions` | Prescription information |
+| `prescription_items` | Individual prescribed medicines |
+| `referrals` | Medical referral records |
+| `audit_logs` | Administrative and system activity records |
+| `doctor_patient_access` | Doctor-patient access management |
+
+The relational structure helps organize healthcare information and maintain relationships between users, patients, doctors, and treatment records.
+
+---
+
+## 10. Project Folder Structure
+
+```text
+MedTrail/
+│
+├── client/
+│   ├── public/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── lib/
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│   ├── package.json
+│   ├── vercel.json
+│   └── vite.config.js
+│
+├── server/
+│   ├── src/
+│   │   ├── config/
+│   │   ├── middleware/
+│   │   ├── modules/
+│   │   ├── routes/
+│   │   ├── app.js
+│   │   └── server.js
+│   │
+│   ├── scripts/
+│   ├── certs/
+│   ├── package.json
+│   ├── .env.example
+│   └── vercel.json
+│
+├── database/
+│   └── schema.sql
+│
+├── docs/
+│   └── deployment.md
+│
+└── README.md
+```
+
+---
+
+## 11. Installation and Local Setup
+
+Follow these steps to run MediTrail locally.
+
+### Prerequisites
+
+Install the following:
+
+- Node.js
+- npm
+- MySQL 8 or an accessible MySQL database
+- Git
+- Visual Studio Code (recommended)
+
+### Step 1: Clone the Repository
+
+```bash
+git clone https://github.com/sunnysaini2004/MedTrail.git
+```
+
+Navigate into the project:
+
+```bash
+cd MedTrail
+```
+
+### Step 2: Backend Setup
+
+Navigate to the server directory:
+
+```bash
+cd server
+```
+
+Install dependencies:
+
+```bash
 npm install
-if (-not (Test-Path .env)) { Copy-Item .env.example .env }
-notepad .env
-~~~
+```
 
-In the local server/.env file, set your own MySQL connection values:
+Create your environment file:
 
-- DB_HOST=localhost
-- DB_PORT=3306
-- DB_USER=root (or your MySQL user)
-- DB_PASSWORD= followed by your local MySQL password; leave it empty if your local account has no password.
-- DB_NAME=meditrail
-- CLIENT_ORIGIN=http://localhost:5173
-- PORT=5000
-- NODE_ENV=development
-- JWT_SECRET= followed by a local random value of at least 32 characters.
+```bash
+copy .env.example .env
+```
 
-To generate a random JWT secret locally, run this in PowerShell, then put its output in JWT_SECRET in the local file:
+Configure the required environment variables in `server/.env`.
 
-~~~powershell
-node -e "process.stdout.write(require('node:crypto').randomBytes(32).toString('hex'))"
-~~~
+Example:
 
-Keep .env on your computer. Never share your MySQL password or JWT secret in chat or commit them.
+```env
+NODE_ENV=development
+PORT=5000
 
-### 3. Initialize the database safely
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=meditrail
+DB_USER=your_mysql_username
+DB_PASSWORD=your_mysql_password
 
-From **Terminal 1**, still in server/:
+DB_SSL=false
+DB_CONNECTION_LIMIT=3
 
-~~~powershell
+JWT_SECRET=your_long_random_secret
+CLIENT_ORIGIN=http://localhost:5173
+```
+
+For Aiven MySQL, configure the database hostname, credentials, TLS settings, and CA certificate according to your environment.
+
+**Never commit `.env` files or database credentials to GitHub.**
+
+### Step 3: Database Setup
+
+Create the `meditrail` database if it does not already exist.
+
+Initialize the database using the project scripts:
+
+```bash
 npm run db:init
-npm run db:check
+npm run db:migrate:access
 npm run db:migrate:account-recovery
 npm run db:migrate:hospital-settings
-~~~
-
-db:init creates the meditrail database and any missing tables. It does not delete existing rows. The MySQL user needs permission to create the database and tables.
-
-`db:migrate:account-recovery` is a safe, additive migration for an existing installation. It adds only `must_change_password` and `session_version` columns to `users` when they are missing. Existing accounts keep their passwords and sessions; it does not remove or update any user or clinical records.
-
-`db:migrate:hospital-settings` safely adds the hospital contact settings table and widens the existing nullable `patients.blood_group` column so it can store “Unknown / Not sure”. It checks that the connected database is exactly `meditrail` and preserves existing accounts and records. Admins can edit the public home-page contact details in the Admin dashboard under **Hospital contact settings**. Patient registration accepts an optional blood group; leaving it blank is fine.
-
-For a fresh, disposable demo database only, add the optional synthetic demo records with:
-
-~~~powershell
-npm run demo:seed
-~~~
-
-demo:seed adds the synthetic demo patient if absent and ensures one sample consultation and prescription without duplicating them. It does not delete existing rows. It creates the default Admin if none exists; if one Admin exists, it updates that same row to the demo Admin name, email, and password. If multiple Admins exist, it only reuses the fixed prior demo account (admin@meditrail.test) when exactly one such account exists; otherwise it stops instead of taking over an arbitrary Admin. It also creates or updates the fixed demo Doctor account, reusing its fixed prior registration number if present.
-
-**Existing-database warning:** `demo:seed` can change the credentials for its fixed demo Admin and Doctor accounts. Do not run it just to troubleshoot a login on a database with accounts you want to keep. The account-recovery migration does not change existing account credentials.
-
-### Reset patient demo data (destructive)
-
-This operation deletes **all PATIENT-role accounts** in the meditrail database, plus their patient profiles, consultations, prescriptions and prescription items, referrals, and doctor access grants. Admin and Doctor rows are kept. The fixed prior demo Admin/Doctor rows may be updated to the documented demo login; unrelated accounts remain unchanged. Audit history is kept. After deletion, it recreates the synthetic demo patient and sample visit. It does not drop the database, clear all tables, or touch another database.
-
-Only run this if you are okay losing those patient records:
-
-~~~powershell
-Set-Location "D:\College Project\meditrail\server"
-npm run demo:reset
-~~~
-
-The script checks the connected database and expected foreign keys first. It then requires you to type exactly RESET MEDTRAIL PATIENTS. If the database is not exactly meditrail, the expected schema is missing, you decline confirmation, or the transaction fails, it does not complete the reset. Do not start this command unattended.
-
-### 4. Run the backend
-
-Use **Terminal 1**:
-
-~~~powershell
-Set-Location "D:\College Project\meditrail\server"
-npm start
-~~~
-
-The API is at http://localhost:5000. Its health check is http://localhost:5000/api/health. Leave this terminal open.
-
-### 5. Run the frontend
-
-Open **PowerShell Terminal 2**:
-
-~~~powershell
-Set-Location "D:\College Project\meditrail\client"
-npm install
-npm run dev
-~~~
-
-Open the URL printed by Vite, normally http://localhost:5173.
-
-## Sign in and demonstrate
-
-- Home page: choose Admin, Doctor, or Patient.
-- Direct login pages: /login/admin, /login/doctor, and /login/patient.
-- General login chooser: /login.
-- Admin dashboard: /admin.
-- Doctor dashboard: /doctor.
-- Patient dashboard: /dashboard.
-- Patient registration: /register. Use a Gmail address. This form can create only a patient account.
-- Admin can add doctors and patients, then select a patient and doctor in **Assign or change doctor**.
-- Admins can maintain the hospital name, email, phone, address, and working hours shown in the public home-page contact section.
-- A doctor sees only patients currently assigned to them or made accessible by an accepted referral.
-- Admin deletion asks for confirmation. Deleting a patient also deletes that patient's linked clinical records and grants, while retaining audit history. Deleting a doctor deletes their account, access grants, referrals involving that doctor, consultations they recorded, and prescriptions they wrote. Other user accounts and unrelated patients are kept.
-- Admin account management can issue a one-time temporary password to an active patient or doctor. It is shown once on screen, stored only as a bcrypt hash, and requires the account owner to change it before opening a dashboard. No email service is configured, so the administrator must share it through a private channel. The temporary password is not included in logs or account listings.
-
-Every role login checks that the database account has that exact role. A patient cannot sign in using the Admin or Doctor login option. Patient registration ignores any requested role and always creates PATIENT.
-
-## Run available checks
-
-Run these commands from **Terminal 1** in server/ after configuring MySQL and initializing the schema:
-
-~~~powershell
-npm run test:auth
-npm run test:workflows
-npm run test:demo
-npm run test:db-config
-~~~
-
-Run the production build from **Terminal 2** in client/:
-
-~~~powershell
-npm run build
-~~~
-
-The authentication and workflow checks use temporary synthetic records and remove them afterward. The demo seed check uses a mock database connection. db:check verifies the current MySQL connection.
-
-## If MySQL does not connect
-
-From server/, try:
-
-~~~powershell
-Get-Service *MySQL*
 npm run db:check
-~~~
+```
 
-- ECONNREFUSED: start MySQL and check DB_HOST and DB_PORT.
-- ER_ACCESS_DENIED_ERROR: check DB_USER and DB_PASSWORD in your local .env; do not share those values.
-- ER_BAD_DB_ERROR: check DB_NAME=meditrail, then run npm run db:init.
-- A permission error during db:init: use a MySQL account that can create a database and tables, or create the meditrail database through MySQL Workbench first, then run npm run db:init.
-- If the server says authentication is not configured, set JWT_SECRET to a random value with 32 or more characters and restart the backend.
+Run migrations only when appropriate for the current database state. Do not repeatedly initialize or migrate a database without checking the existing schema.
 
-## Important limitation
+### Step 4: Create the First Admin Account
 
-This is a college demonstration prototype. It is not a real medical record system and has not been designed or certified for real healthcare use. Use only synthetic data.
+From the server directory:
+
+```bash
+npm run account:bootstrap-admin
+```
+
+Follow the prompts to provide:
+
+- Admin full name
+- Admin email
+- Admin password
+
+The bootstrap script creates an administrator account if one does not already exist.
+
+### Step 5: Start the Backend
+
+```bash
+npm start
+```
+
+The backend will run on the configured local port, normally:
+
+```text
+http://localhost:5000
+```
+
+### Step 6: Frontend Setup
+
+Open another terminal and navigate to the client directory:
+
+```bash
+cd client
+```
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Start the React development server:
+
+```bash
+npm run dev
+```
+
+Open the local frontend URL shown by Vite, normally:
+
+```text
+http://localhost:5173
+```
+
+---
+
+## 12. Live Deployment
+
+MediTrail is deployed using Vercel and Aiven.
+
+### Frontend
+
+**Platform:** Vercel
+
+**Live URL:**
+
+https://meditrail-frontend-rho.vercel.app
+
+### Backend
+
+**Platform:** Vercel Express Function
+
+**Backend URL:**
+
+https://med-trail.vercel.app
+
+**Health Check:**
+
+https://med-trail.vercel.app/api/health
+
+### Database
+
+**Platform:** Aiven Cloud MySQL
+
+The production backend connects to the MySQL database through an encrypted TLS connection.
+
+### Production Architecture
+
+```text
+User Browser
+     |
+     v
+Vercel React Frontend
+     |
+     v
+Vercel API Rewrite
+     |
+     v
+Vercel Express Backend
+     |
+     v
+Aiven MySQL Database
+```
+
+---
+
+## 13. Security Considerations
+
+MediTrail incorporates several security-related mechanisms:
+
+- Password hashing using bcryptjs.
+- JWT-based authentication.
+- HttpOnly authentication cookies.
+- Secure cookies in production.
+- Role-based backend authorization.
+- Protected API endpoints.
+- MySQL TLS certificate verification.
+- Credential separation between frontend and backend.
+- Audit logging for relevant activities.
+
+**Important:** MediTrail is an academic project and demonstration system. It has not been established as a production-certified healthcare platform. Use synthetic patient data for testing and demonstrations. Real patient information should not be uploaded without appropriate security, privacy, regulatory, and operational safeguards.
+
+---
+
+## 14. Future Enhancements
+
+Potential improvements for future development include:
+
+- Medical report and document uploads.
+- Advanced search and filtering for patient records.
+- Email and SMS notifications.
+- Appointment scheduling.
+- Doctor availability management.
+- Downloadable medical history reports.
+- Enhanced analytics and hospital statistics.
+- Advanced audit and access monitoring.
+- Stronger patient consent and record-sharing workflows.
+
+---
+
+## 15. Project Information
+
+**Project Name:** MediTrail
+
+**Project Type:** MCA Academic Mini Project
+
+**Project Category:** Healthcare Management / Web Application
+
+**Development Approach:** Full-Stack Web Development
+
+**Primary Objective:** Digital patient medical record and referral management.
+
+**Repository:** https://github.com/sunnysaini2004/MedTrail
+
+**Live Application:** https://meditrail-frontend-rho.vercel.app
+
+---
+
+## 16. Author
+
+**Developed by Sunny Saini**
+
+MCA Student | Aspiring Full Stack Developer
+
+- GitHub: https://github.com/sunnysaini2004
+- Portfolio: https://sunny-portfolio-nine.vercel.app
+
+---
+
+<p align="center">
+  <b>MediTrail – One Patient. One Connected Treatment Journey.</b>
+  <br/>
+  Making patient information management more organized, accessible, and connected.
+</p>
