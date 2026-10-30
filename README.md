@@ -30,6 +30,10 @@ Passwords are stored as bcrypt hashes. Demo seed data is synthetic. Do not enter
 - Database: MySQL schema and migrations (database/).
 - Project notes and demo flow (docs/).
 
+## Online demo deployment
+
+See [`meditrail/docs/deployment.md`](meditrail/docs/deployment.md) for the Vercel, Render, and Aiven setup. It uses a same-origin Vercel API proxy for cookie authentication and requires verified TLS for the production MySQL connection. The free hosting plans are for an academic synthetic-data demo, not dependable clinical production.
+
 ## Requirements
 
 Install Node.js with npm and MySQL 8. Commands below use this project location: D:\College Project\meditrail. Change the path if your folder is elsewhere.
@@ -171,6 +175,7 @@ Run these commands from **Terminal 1** in server/ after configuring MySQL and in
 npm run test:auth
 npm run test:workflows
 npm run test:demo
+npm run test:db-config
 ~~~
 
 Run the production build from **Terminal 2** in client/:

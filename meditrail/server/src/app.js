@@ -8,6 +8,7 @@ const patientRoutes = require("./modules/patients/patient.routes");
 const adminRoutes = require("./modules/admin/admin.routes");
 const doctorRoutes = require("./modules/doctors/doctor.routes");
 const publicSettingsRoutes = require("./modules/settings/public-settings.routes");
+const pool = require("./config/db");
 
 const app = express();
 
@@ -25,6 +26,15 @@ app.get("/api/health", (req, res) => {
     success: true,
     message: "MediTrail backend is running!",
   });
+});
+
+app.get("/api/health/ready", async (req, res) => {
+  try {
+    await pool.query("SELECT 1");
+    return res.status(200).json({ success: true, database: "available" });
+  } catch {
+    return res.status(503).json({ success: false, message: "The database is not ready." });
+  }
 });
 
 app.use("/api/v1/auth", authRoutes);

@@ -45,6 +45,10 @@ async function runAuthSmokeTest() {
     const health = await request("/api/health");
     assert.equal(health.response.status, 200, "health endpoint should remain available");
 
+    const readiness = await request("/api/health/ready");
+    assert.equal(readiness.response.status, 200, "readiness endpoint should confirm a working database connection");
+    assert.equal(readiness.body.database, "available");
+
     const publicSettings = await request("/api/v1/public/hospital-settings");
     assert.equal(publicSettings.response.status, 200, "public hospital settings route should be mounted");
 

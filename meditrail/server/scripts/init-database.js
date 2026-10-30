@@ -3,6 +3,7 @@ require("dotenv").config();
 const fs = require("node:fs");
 const path = require("node:path");
 const mysql = require("mysql2/promise");
+const { getMysqlSslOptions } = require("../src/config/mysql-ssl");
 
 const DATABASE_NAME = "meditrail";
 
@@ -19,6 +20,7 @@ async function initializeDatabase() {
     port: Number(process.env.DB_PORT || 3306),
     user: process.env.DB_USER || "root",
     password: process.env.DB_PASSWORD || "",
+    ssl: getMysqlSslOptions(),
     multipleStatements: true,
   });
 

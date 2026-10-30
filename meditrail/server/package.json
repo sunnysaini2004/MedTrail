@@ -10,6 +10,7 @@
     "test:workflows": "node test-workflows.js",
     "test:demo": "node test-demo-users.js",
     "db:check": "node test-db.js",
+    "test:db-config": "node test-db-config.js",
     "db:init": "node scripts/init-database.js",
     "db:migrate:access": "node scripts/apply-access-migration.js",
     "db:migrate:account-recovery": "node scripts/apply-account-recovery-migration.js",

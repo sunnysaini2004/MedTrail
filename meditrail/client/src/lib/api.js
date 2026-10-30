@@ -1,6 +1,13 @@
+const defaultApiBaseUrl = import.meta.env.PROD
+  ? "/api/v1"
+  : "http://localhost:5000/api/v1";
 const API_BASE_URL = (
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/v1"
+  import.meta.env.VITE_API_BASE_URL || defaultApiBaseUrl
 ).replace(/\/+$/, "");
+
+if (import.meta.env.PROD && API_BASE_URL !== "/api/v1") {
+  throw new Error("Production API requests must use the same-origin /api/v1 proxy.");
+}
 
 export class ApiError extends Error {
   constructor(message, status = 0) {
