@@ -3,7 +3,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://meditrail-api.onrender.com/api/:path*"
+      "destination": "https://med-trail.vercel.app/api/:path*"
     },
     {
       "source": "/(.*)",
