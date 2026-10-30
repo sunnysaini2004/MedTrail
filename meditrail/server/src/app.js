@@ -3,6 +3,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const { timingSafeEqual } = require("node:crypto");
 const authRoutes = require("./modules/auth/auth.routes");
 const patientRoutes = require("./modules/patients/patient.routes");
 const adminRoutes = require("./modules/admin/admin.routes");
@@ -32,6 +33,28 @@ app.get("/api/health", (req, res) => {
     success: true,
     message: "MediTrail backend is running!",
   });
+});
+
+app.get("/api/db-health", async (req, res) => {
+  const configuredSecret = process.env.DB_HEALTH_SECRET;
+  const suppliedSecret = req.get("x-health-check-secret");
+
+  if (!configuredSecret || !suppliedSecret) {
+    return res.status(401).json({ success: false, message: "Unauthorized." });
+  }
+
+  const expected = Buffer.from(configuredSecret, "utf8");
+  const supplied = Buffer.from(suppliedSecret, "utf8");
+  if (expected.length !== supplied.length || !timingSafeEqual(expected, supplied)) {
+    return res.status(401).json({ success: false, message: "Unauthorized." });
+  }
+
+  try {
+    await pool.query("SELECT 1");
+    return res.status(200).json({ success: true, database: "available" });
+  } catch {
+    return res.status(503).json({ success: false, message: "Database check failed." });
+  }
 });
 
 app.get("/api/health/ready", async (req, res) => {

@@ -8,6 +8,7 @@
     "dev": "node --watch src/server.js",
     "test:auth": "node test-auth.js",
     "test:workflows": "node test-workflows.js",
+    "test:db-health": "node test-db-health.js",
     "test:demo": "node test-demo-users.js",
     "db:check": "node test-db.js",
     "test:db-config": "node test-db-config.js",
