@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar.jsx";
 import Footer from "../components/Footer.jsx";
+import InfoNotice from "../components/InfoNotice.jsx";
 import { getRoleLoginPath } from "../lib/roleRoutes.js";
 import { apiRequest } from "../lib/api.js";
 import { ArrowRight, ClipboardPlus, FileHeart, HeartHandshake, ShieldCheck, Stethoscope, UserRound } from "lucide-react";
@@ -60,9 +61,7 @@ function Home() {
             </a>
           </div>
 
-          <p className="demo-note">
-            Academic project demo — not for real clinical use.
-          </p>
+          <InfoNotice>Academic project demo — not for real clinical use.</InfoNotice>
         </section>
 
         <section className="mx-auto max-w-6xl px-6 py-14 sm:px-8" id="login-options">

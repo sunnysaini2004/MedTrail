@@ -1,37 +1,45 @@
 @import "tailwindcss";
 @theme {
   --font-sans: "Inter", system-ui, sans-serif;
-  --color-slate-50: #f8fafc;
-  --color-slate-100: #eef2f6;
-  --color-slate-200: #dde5ed;
-  --color-slate-300: #c5d0dc;
-  --color-slate-400: #91a0b0;
-  --color-slate-500: #66768a;
-  --color-slate-600: #384967;
-  --color-slate-700: #263445;
-  --color-slate-800: #17395e;
-  --color-slate-900: #002855;
-  --color-teal-50: #eaf5f6;
-  --color-teal-100: #d7edf0;
-  --color-teal-200: #b4dfe5;
-  --color-teal-500: #00788d;
-  --color-teal-600: #006b7f;
-  --color-teal-700: #00596b;
-  --color-teal-800: #004b5c;
-  --color-blue-500: #00788d;
-  --color-blue-600: #00a9ce;
+  --color-slate-50: #ffffff;
+  --color-slate-100: #f5f5f5;
+  --color-slate-200: #eaeaea;
+  --color-slate-300: #d9d9d9;
+  --color-slate-400: #a0a0a0;
+  --color-slate-500: #808080;
+  --color-slate-600: #595959;
+  --color-slate-700: #333333;
+  --color-slate-800: #242424;
+  --color-slate-900: #121212;
+  --color-slate-950: #121212;
+  --color-teal-50: #f5f5f5;
+  --color-teal-100: #eaeaea;
+  --color-teal-200: #d9d9d9;
+  --color-teal-500: #595959;
+  --color-teal-600: #404040;
+  --color-teal-700: #333333;
+  --color-teal-800: #121212;
+  --color-blue-50: #f5f5f5;
+  --color-blue-100: #eaeaea;
+  --color-blue-200: #d9d9d9;
+  --color-blue-500: #595959;
+  --color-blue-600: #333333;
+  --color-violet-50: #f5f5f5;
+  --color-violet-100: #eaeaea;
+  --color-violet-200: #d9d9d9;
+  --color-violet-700: #333333;
 }
 :root {
   font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
-  color: #263445;
-  background: #f8fafc;
-  --mt-navy: #002855;
-  --mt-secondary: #384967;
-  --mt-accent: #00788d;
-  --mt-highlight: #00a9ce;
-  --mt-soft: #dde5ed;
-  --mt-border: #d8e0e8;
+  color: #121212;
+  background: #ffffff;
+  --mt-navy: #121212;
+  --mt-secondary: #595959;
+  --mt-accent: #333333;
+  --mt-highlight: #808080;
+  --mt-soft: #f5f5f5;
+  --mt-border: #d9d9d9;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -759,4 +767,80 @@ tbody tr:hover { background: #f8fafc; }
     width: 100%;
     box-sizing: border-box;
   }
+}
+
+/* MediTrail monochrome clinical theme overrides */
+body, .app, .doctor-workspace, .admin-workspace { background: #fff; color: #121212; }
+h1, h2, h3, h4 { color: #121212; }
+.navbar { background: #121212; color: #fff; border-color: #333; box-shadow: none; }
+.brand, .navbar .login-link { color: #fff; }
+.brand-icon { background: #333; color: #fff; }
+.navbar nav a:hover, .navbar nav a:focus-visible, .navbar-menu-button { color: #fff; border-color: #a0a0a0; }
+.navbar nav a:hover, .navbar nav a:focus-visible { border-bottom-color: #fff; }
+.navbar-menu-button { background: transparent; }
+.navbar nav.open { background: #333; border-color: #595959; }
+.navbar-actions button { color: #fff; }
+.hero { background: #f5f5f5; border-color: #d9d9d9; }
+.hero h1 span, .eyebrow, .service-icon { color: #333; }
+.hero-description, .service-card p, .about p, .contact p { color: #595959; }
+.button-primary { color: #fff; background: #333; }
+.button-primary:hover { background: #121212; }
+.button-secondary, #login-options article a { color: #121212; background: #fff; border-color: #d9d9d9; }
+.button-secondary:hover, #login-options article a:hover { background: #f5f5f5; border-color: #808080; }
+.service-card, #login-options article { background: #fff; border-color: #d9d9d9; border-radius: 8px; box-shadow: 0 1px 4px rgb(18 18 18 / 5%); }
+.about, .about.home-about { background: #f5f5f5; }
+.about.home-about h2 { color: #121212; }
+.contact { background: #fff; }
+.footer { background: #fff; color: #595959; border-color: #d9d9d9; }
+.footer .brand { color: #121212; }
+.footer p, .demo-note { color: #595959; }
+.auth-page main > .about, .app > main > .about:not(.home-about) { background: #fff; border-color: #d9d9d9; }
+.auth-form label, .doctor-workspace label, .admin-workspace label { color: #333; }
+.auth-form input, .auth-form select, .auth-form textarea,
+.doctor-workspace input, .doctor-workspace select, .doctor-workspace textarea,
+.admin-workspace input:not([type=checkbox]), .admin-workspace select, .admin-workspace textarea {
+  border-color: #d9d9d9; color: #121212; background: #fff;
+}
+.auth-form input:focus-visible, .auth-form select:focus-visible, .auth-form textarea:focus-visible,
+.doctor-workspace input:focus-visible, .doctor-workspace select:focus-visible, .doctor-workspace textarea:focus-visible,
+.admin-workspace input:focus-visible, .admin-workspace select:focus-visible, .admin-workspace textarea:focus-visible {
+  border-color: #595959; box-shadow: 0 0 0 3px rgb(89 89 89 / 15%);
+}
+.auth-form input::placeholder, .doctor-workspace input::placeholder, .admin-workspace input::placeholder { color: #808080; }
+.auth-form .button, .doctor-workspace button, .admin-workspace button { border-radius: 6px; }
+.doctor-workspace main > header, .admin-workspace main > header { border-color: #d9d9d9; }
+.doctor-workspace form, .doctor-workspace section > div.bg-white, .doctor-workspace > main > section.rounded-2xl,
+.admin-workspace form.rounded-2xl, .admin-workspace section > div.rounded-2xl,
+.admin-workspace article.bg-white, .admin-workspace section.bg-white {
+  border-color: #d9d9d9; background-color: #fff; border-radius: 8px; box-shadow: 0 1px 4px rgb(18 18 18 / 5%);
+}
+.doctor-workspace th, .admin-workspace th { background: #f5f5f5; color: #333; }
+.doctor-workspace th, .doctor-workspace td, .admin-workspace th, .admin-workspace td { border-color: #d9d9d9; }
+.doctor-workspace tbody tr:hover, .admin-workspace tbody tr:hover { background: #f5f5f5; }
+.timeline-marker { border-color: #595959; }
+.timeline-content, .dashboard-card, .dashboard-next-steps { border-color: #d9d9d9; background: #fff; box-shadow: 0 1px 4px rgb(18 18 18 / 5%); }
+.dashboard-patient-id { border-color: #d9d9d9; }
+.dashboard-disclaimer { color: #595959; }
+.demo-note {
+  display: flex; align-items: flex-start; gap: 10px; width: min(100%, 520px);
+  margin: 20px auto 0; padding: 12px 14px; border: 1px solid #d9d9d9;
+  border-left: 3px solid #595959; border-radius: 6px; background: #eaeaea;
+  color: #333; font-size: .875rem; line-height: 1.55; text-align: left;
+  overflow-wrap: anywhere; word-break: normal;
+}
+.demo-note svg { flex: 0 0 auto; margin-top: 1px; color: #595959; }
+.auth-form [role=alert] { padding: 10px 12px; border: 1px solid #fecaca; border-radius: 6px; background: #fef2f2; color: #991b1b; line-height: 1.5; overflow-wrap: anywhere; }
+.auth-form a, .contact a { color: #333; text-decoration: underline; text-underline-offset: 3px; }
+.auth-form a:hover, .contact a:hover { color: #121212; }
+:focus-visible { outline-color: #595959; }
+
+@media (max-width: 700px) {
+  .navbar nav.open { background: #333; }
+  .demo-note { margin-top: 16px; }
+  .doctor-workspace th, .doctor-workspace td, .admin-workspace th, .admin-workspace td { padding: .65rem .75rem; }
+}
+
+@media (max-width: 420px) {
+  .auth-page main > .about, .app > main > .about:not(.home-about) { width: calc(100% - 1.25rem); margin-block: 1rem; padding: 1rem; }
+  .demo-note { padding: 10px 11px; font-size: .8125rem; }
 }

@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar.jsx";
 import Footer from "../components/Footer.jsx";
 import PasswordInput from "../components/PasswordInput.jsx";
+import InfoNotice from "../components/InfoNotice.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 
 function Register() {
@@ -143,10 +144,7 @@ function Register() {
             <Link to="/login">Login here</Link>
           </p>
 
-          <p className="demo-note">
-            Academic project demo. Do not enter real medical or personal data.
-            Use synthetic details only.
-          </p>
+          <InfoNotice>Academic project demo. Do not enter real medical or personal data. Use synthetic details only.</InfoNotice>
         </section>
       </main>
 

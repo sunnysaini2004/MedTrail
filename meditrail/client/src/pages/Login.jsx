@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import Navbar from "../components/Navbar.jsx";
 import Footer from "../components/Footer.jsx";
 import PasswordInput from "../components/PasswordInput.jsx";
+import InfoNotice from "../components/InfoNotice.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import {
   canRoleAccessPath,
@@ -137,9 +138,7 @@ function Login() {
 
           {selectedRole === "PATIENT" && <p>Don't have an account? <Link to="/register">Create a patient account</Link></p>}
 
-          <p className="demo-note">
-            Academic project demo. Use synthetic credentials only.
-          </p>
+          <InfoNotice>Academic project demo. Use synthetic credentials only.</InfoNotice>
         </section>
       </main>
 
