@@ -61,7 +61,12 @@ app.get("/api/health/ready", async (req, res) => {
   try {
     await pool.query("SELECT 1");
     return res.status(200).json({ success: true, database: "available" });
-  } catch {
+  } catch (error) {
+    console.error(
+      "Database readiness check failed:",
+      error.code || "unknown error",
+      error.name || "unknown error"
+    );
     return res.status(503).json({ success: false, message: "The database is not ready." });
   }
 });
