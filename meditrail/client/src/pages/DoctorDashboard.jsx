@@ -119,7 +119,7 @@ function DoctorDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800">
+    <div className="doctor-workspace min-h-screen bg-slate-50 text-slate-800">
       <Navbar />
       <main className="mx-auto max-w-6xl space-y-8 px-4 py-10 sm:px-6">
         <header>

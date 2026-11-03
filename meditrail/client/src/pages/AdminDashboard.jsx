@@ -201,7 +201,7 @@ function AdminDashboard() {
   const activeDoctors = doctors.filter((item) => item.isActive);
 
   return (
-    <div className="min-h-screen overflow-x-clip bg-slate-50 text-slate-800">
+    <div className="admin-workspace min-h-screen overflow-x-clip bg-slate-50 text-slate-800">
       <Navbar />
       <main className="mx-auto w-full max-w-7xl space-y-7 px-4 py-7 sm:px-6 sm:py-10">
         <header>

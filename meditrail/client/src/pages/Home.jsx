@@ -4,11 +4,12 @@ import Navbar from "../components/Navbar.jsx";
 import Footer from "../components/Footer.jsx";
 import { getRoleLoginPath } from "../lib/roleRoutes.js";
 import { apiRequest } from "../lib/api.js";
+import { ArrowRight, ClipboardPlus, FileHeart, HeartHandshake, ShieldCheck, Stethoscope, UserRound } from "lucide-react";
 
 const loginOptions = [
-  { role: "ADMIN", name: "Admin", description: "Manage patient and doctor accounts.", color: "border-teal-200 bg-teal-50 text-teal-900" },
-  { role: "DOCTOR", name: "Doctor", description: "Open your assigned patients and care notes.", color: "border-blue-200 bg-blue-50 text-blue-900" },
-  { role: "PATIENT", name: "Patient", description: "View your own treatment history.", color: "border-violet-200 bg-violet-50 text-violet-900" },
+  { role: "ADMIN", name: "Admin", description: "Manage patient and doctor accounts.", color: "", icon: ShieldCheck },
+  { role: "DOCTOR", name: "Doctor", description: "Open your assigned patients and care notes.", color: "", icon: Stethoscope },
+  { role: "PATIENT", name: "Patient", description: "View your own treatment history.", color: "", icon: UserRound },
 ];
 
 
@@ -72,15 +73,16 @@ function Home() {
           </div>
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             {loginOptions.map((option) => (
-              <article key={option.role} className={`rounded-2xl border p-6 shadow-sm ${option.color}`}>
-                <p className="text-xs font-bold uppercase tracking-[0.18em]">{option.name} workspace</p>
-                <h3 className="mt-3 text-2xl font-semibold">Login as {option.name}</h3>
+              <article key={option.role} className={`login-option rounded-lg border p-5 ${option.color}`}>
+                <option.icon className="mb-4 text-teal-700" size={22} strokeWidth={1.8} aria-hidden="true" />
+                <p className="text-xs font-semibold uppercase tracking-[0.14em]">{option.name} workspace</p>
+                <h3 className="mt-2 text-xl font-semibold">Login as {option.name}</h3>
                 <p className="mt-2 min-h-12 text-sm text-slate-600">{option.description}</p>
                 <Link
                   className="mt-5 inline-flex min-h-11 items-center rounded-lg bg-white px-4 font-semibold text-slate-900 shadow-sm ring-1 ring-slate-200 hover:bg-slate-50"
                   to={getRoleLoginPath(option.role)}
                 >
-                  Continue as {option.name}
+                  Continue as {option.name}<ArrowRight className="ml-2" size={16} aria-hidden="true" />
                 </Link>
               </article>
             ))}
@@ -96,7 +98,7 @@ function Home() {
 
           <div className="service-grid">
             <article className="service-card">
-              <span className="service-icon">01</span>
+              <span className="service-icon"><FileHeart size={22} strokeWidth={1.8} aria-hidden="true" /></span>
               <h3>Patient Records</h3>
               <p>
                 Keep permitted patient information organized and accessible.
@@ -104,7 +106,7 @@ function Home() {
             </article>
 
             <article className="service-card">
-              <span className="service-icon">02</span>
+              <span className="service-icon"><ClipboardPlus size={22} strokeWidth={1.8} aria-hidden="true" /></span>
               <h3>Consultations</h3>
               <p>
                 Maintain a chronological record of consultations and care.
@@ -112,7 +114,7 @@ function Home() {
             </article>
 
             <article className="service-card">
-              <span className="service-icon">03</span>
+              <span className="service-icon"><HeartHandshake size={22} strokeWidth={1.8} aria-hidden="true" /></span>
               <h3>Referrals</h3>
               <p>
                 Help authorized doctors coordinate a patient's next steps.

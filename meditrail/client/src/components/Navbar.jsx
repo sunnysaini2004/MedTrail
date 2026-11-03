@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { getRoleHomePath } from "../lib/roleRoutes.js";
+import { Activity, Menu, X, LogOut } from "lucide-react";
 
 function Navbar() {
   const { pathname } = useLocation();
@@ -26,7 +27,7 @@ function Navbar() {
   return (
     <header className="navbar">
       <Link className="brand" to="/">
-        <span className="brand-icon">M</span>
+        <span className="brand-icon"><Activity size={19} aria-hidden="true" /></span>
         MediTrail
       </Link>
 
@@ -38,7 +39,7 @@ function Navbar() {
         aria-controls="main-navigation"
         onClick={() => setMenuOpen((open) => !open)}
       >
-        <span aria-hidden="true">{menuOpen ? "×" : "☰"}</span>
+        {menuOpen ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
       </button>
 
       <nav id="main-navigation" className={menuOpen ? "navbar-menu open" : "navbar-menu"} aria-label="Main navigation">
@@ -61,7 +62,7 @@ function Navbar() {
       <div className="navbar-actions">
       {user ? (
         <button className="login-link border-0 bg-transparent p-0" type="button" onClick={handleLogout}>
-          Log out
+          <LogOut size={16} aria-hidden="true" /> Log out
         </button>
       ) : pathname === "/login" ? (
         <Link className="login-link" to="/register">
