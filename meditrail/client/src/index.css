@@ -80,10 +80,10 @@ a {
   justify-content: space-between;
   gap: 24px;
   padding: 16px 7%;
-  border-bottom: 1px solid #17395e;
-  background: #002855;
+  border-bottom: 1px solid #595959;
+  background: #333333;
   color: #fff;
-  box-shadow: 0 2px 8px rgb(0 40 85 / 10%);
+  box-shadow: none;
   position: relative;
   z-index: 20;
 }
@@ -103,7 +103,7 @@ a {
   width: 36px;
   height: 36px;
   border-radius: 9px;
-  background: #00788d;
+  background: #595959;
   color: white;
 }
 
@@ -208,12 +208,6 @@ a {
 .button-secondary {
   border: 1px solid #cddbd9;
   background: white;
-}
-
-.demo-note {
-  margin-top: 24px;
-  color: #718187;
-  font-size: 12px;
 }
 
 .services,
@@ -648,7 +642,6 @@ tbody tr:hover { background: #f8fafc; }
 .navbar-actions button { color: inherit; }
 .footer { color: #384967; }
 .hero { border-bottom: 1px solid #dde5ed; }
-.hero .demo-note { margin-top: 22px; }
 #login-options { max-width: 1120px; }
 #login-options article { background: #fff; border-color: #dde5ed; border-radius: 10px; box-shadow: 0 2px 8px rgb(0 40 85 / 4%); }
 #login-options article h3 { font-size: 1.2rem; }
@@ -689,7 +682,7 @@ tbody tr:hover { background: #f8fafc; }
   .navbar { gap: 12px; }
   .navbar .brand { font-size: 18px; }
   .navbar-actions { margin-left: 0; }
-  .navbar nav.open { padding: 12px; border: 1px solid #315579; border-radius: 8px; background: #073363; }
+  .navbar nav.open { padding: 12px; border: 1px solid #595959; border-radius: 8px; background: #333333; }
   .navbar nav.open a { min-height: 42px; }
   .hero { padding: 58px 5%; }
   .hero h1 { font-size: clamp(34px, 9vw, 46px); }
@@ -713,13 +706,6 @@ tbody tr:hover { background: #f8fafc; }
   justify-content: center;
   margin-top: 0.75rem;
   text-decoration: none;
-}
-
-.dashboard-disclaimer {
-  margin-top: 2rem;
-  color: #6b7280;
-  font-size: 0.85rem;
-  line-height: 1.6;
 }
 
 /* Tablet */
@@ -772,13 +758,14 @@ tbody tr:hover { background: #f8fafc; }
 /* MediTrail monochrome clinical theme overrides */
 body, .app, .doctor-workspace, .admin-workspace { background: #fff; color: #121212; }
 h1, h2, h3, h4 { color: #121212; }
-.navbar { background: #121212; color: #fff; border-color: #333; box-shadow: none; }
+.navbar { background: #333333; color: #fff; border-color: #595959; box-shadow: none; }
 .brand, .navbar .login-link { color: #fff; }
 .brand-icon { background: #333; color: #fff; }
 .navbar nav a:hover, .navbar nav a:focus-visible, .navbar-menu-button { color: #fff; border-color: #a0a0a0; }
 .navbar nav a:hover, .navbar nav a:focus-visible { border-bottom-color: #fff; }
 .navbar-menu-button { background: transparent; }
-.navbar nav.open { background: #333; border-color: #595959; }
+.navbar nav.open { background: #333333; border-color: #595959; }
+.navbar nav a:hover, .navbar nav a:focus-visible, .navbar-menu-button:hover, .navbar-actions > :hover { background-color: #262626; }
 .navbar-actions button { color: #fff; }
 .hero { background: #f5f5f5; border-color: #d9d9d9; }
 .hero h1 span, .eyebrow, .service-icon { color: #333; }
@@ -793,7 +780,7 @@ h1, h2, h3, h4 { color: #121212; }
 .contact { background: #fff; }
 .footer { background: #fff; color: #595959; border-color: #d9d9d9; }
 .footer .brand { color: #121212; }
-.footer p, .demo-note { color: #595959; }
+.footer p { color: #595959; }
 .auth-page main > .about, .app > main > .about:not(.home-about) { background: #fff; border-color: #d9d9d9; }
 .auth-form label, .doctor-workspace label, .admin-workspace label { color: #333; }
 .auth-form input, .auth-form select, .auth-form textarea,
@@ -820,27 +807,16 @@ h1, h2, h3, h4 { color: #121212; }
 .timeline-marker { border-color: #595959; }
 .timeline-content, .dashboard-card, .dashboard-next-steps { border-color: #d9d9d9; background: #fff; box-shadow: 0 1px 4px rgb(18 18 18 / 5%); }
 .dashboard-patient-id { border-color: #d9d9d9; }
-.dashboard-disclaimer { color: #595959; }
-.demo-note {
-  display: flex; align-items: flex-start; gap: 10px; width: min(100%, 520px);
-  margin: 20px auto 0; padding: 12px 14px; border: 1px solid #d9d9d9;
-  border-left: 3px solid #595959; border-radius: 6px; background: #eaeaea;
-  color: #333; font-size: .875rem; line-height: 1.55; text-align: left;
-  overflow-wrap: anywhere; word-break: normal;
-}
-.demo-note svg { flex: 0 0 auto; margin-top: 1px; color: #595959; }
 .auth-form [role=alert] { padding: 10px 12px; border: 1px solid #fecaca; border-radius: 6px; background: #fef2f2; color: #991b1b; line-height: 1.5; overflow-wrap: anywhere; }
 .auth-form a, .contact a { color: #333; text-decoration: underline; text-underline-offset: 3px; }
 .auth-form a:hover, .contact a:hover { color: #121212; }
 :focus-visible { outline-color: #595959; }
 
 @media (max-width: 700px) {
-  .navbar nav.open { background: #333; }
-  .demo-note { margin-top: 16px; }
+  .navbar nav.open { background: #333333; }
   .doctor-workspace th, .doctor-workspace td, .admin-workspace th, .admin-workspace td { padding: .65rem .75rem; }
 }
 
 @media (max-width: 420px) {
   .auth-page main > .about, .app > main > .about:not(.home-about) { width: calc(100% - 1.25rem); margin-block: 1rem; padding: 1rem; }
-  .demo-note { padding: 10px 11px; font-size: .8125rem; }
 }

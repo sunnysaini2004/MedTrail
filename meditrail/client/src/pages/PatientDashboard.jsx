@@ -151,10 +151,6 @@ function PatientDashboard() {
           </p>
         </section>
 
-        <p className="dashboard-disclaimer">
-          Academic prototype only. All patient information shown here is
-          synthetic demo data and must not be used for clinical decisions.
-        </p>
       </main>
 
       <Footer />

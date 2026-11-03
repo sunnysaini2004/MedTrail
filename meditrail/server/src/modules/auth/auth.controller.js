@@ -188,7 +188,8 @@ async function login(req, res) {
 
     setAuthCookie(res, createToken(user.id, secret, user.sessionVersion));
     return res.status(200).json({ success: true, user: publicUser(user) });
-  } catch {
+  } catch (error) {
+    console.error("Login handler failed:", error.code || error.name || "unknown error");
     return res.status(500).json({
       success: false,
       message: "Unable to log in right now.",

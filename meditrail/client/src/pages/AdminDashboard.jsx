@@ -207,7 +207,7 @@ function AdminDashboard() {
         <header>
           <p className="text-xs font-bold tracking-[0.2em] text-teal-700">ADMINISTRATION</p>
           <h1 className="mt-2 break-words text-2xl font-bold sm:text-3xl">MediTrail admin workspace</h1>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600 sm:text-base">Manage synthetic accounts, assignments, and access. These actions are protected for administrators.</p>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600 sm:text-base">Manage accounts, assignments, and access. These actions are protected for administrators.</p>
         </header>
 
         <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6" aria-labelledby="hospital-settings-heading">

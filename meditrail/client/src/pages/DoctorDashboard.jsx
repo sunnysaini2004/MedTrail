@@ -126,7 +126,7 @@ function DoctorDashboard() {
           <p className="text-xs font-bold tracking-[0.2em] text-teal-700">DOCTOR PORTAL</p>
           <h1 className="mt-2 text-3xl font-bold">{doctor ? "Welcome, " + doctor.fullName : "Doctor workspace"}</h1>
           {doctor && <p className="mt-2 text-slate-600">{doctor.specialty}</p>}
-          <p className="mt-2 max-w-2xl text-sm text-slate-600">Patient records appear only after an administrator grant or accepted referral. Use synthetic project data only.</p>
+          <p className="mt-2 max-w-2xl text-sm text-slate-600">Patient records appear only after an administrator grant or accepted referral.</p>
         </header>
 
         {error && <p className="rounded-lg border border-red-200 bg-red-50 p-3 text-red-800" role="alert">{error}</p>}
